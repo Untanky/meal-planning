@@ -1,5 +1,5 @@
 <div x-data="{ open: false }">
-    <main class="grid grid-cols-4 gap-4">
+    <div class="grid grid-cols-4 gap-4">
         {{range .Days}}
             <section class="border border-gray-700 rounded-xl text-center divide-y divide-gray-700">
                 <h2 class="text-lg p-4">
@@ -24,9 +24,9 @@
                 Add
             </span>
         </button>
-    </main>
+    </div>
     <dialog x-ref="addDialog" class="w-[320px] border border-gray-700 p-8 rounded-xl backdrop backdrop-blur-lg">
-        <form class="flex flex-col space-y-4">
+        <form hx-put="/days" hx-target="#day-plan" class="flex flex-col space-y-4">
             <p class="w-full text-left">
                 <label class="font-light text-gray-700" for="date">Date:</label><br>
                 <input class="w-full px-4 py-2 border border-gray-700 rounded-lg" id="date" type="date" name="date" >

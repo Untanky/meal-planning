@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -42,6 +43,8 @@ func (m *MealPlanningHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		m.serveIndexFile(writer, request)
 	case request.URL.Path == "/days" && request.Method == http.MethodGet:
 		m.serveDays(writer, request)
+	case request.URL.Path == "/days" && request.Method == http.MethodPut:
+		m.putDay(writer, request)
 	}
 }
 
@@ -88,4 +91,13 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (m *MealPlanningHandler) putDay(writer http.ResponseWriter, request *http.Request) {
+	_, err := io.Copy(log.Writer(), request.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	m.serveDays(writer, request)
 }
