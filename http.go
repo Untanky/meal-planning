@@ -5,9 +5,9 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 )
 
@@ -78,11 +78,22 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 	dayDuration := 24 * time.Hour
 	days := make([]day, 7)
 	for i, _ := range days {
-		days[i] = day{
-			t.Format("Monday"),
-			t.Format("02.01.2006"),
-			"Salad",
+		dateQuery := t.Format("2006-01-02")
+		result, err := m.db.Get([]byte(dateQuery), nil)
+		if err == nil {
+			days[i] = day{
+				t.Format("Monday"),
+				t.Format("02.01.2006"),
+				string(result),
+			}
+		} else {
+			days[i] = day{
+				t.Format("Monday"),
+				t.Format("02.01.2006"),
+				"",
+			}
 		}
+
 		t = t.Add(dayDuration)
 	}
 
@@ -97,9 +108,23 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 }
 
 func (m *MealPlanningHandler) putDay(writer http.ResponseWriter, request *http.Request) {
-	_, err := io.Copy(log.Writer(), request.Body)
+	err := request.ParseForm()
 	if err != nil {
-		panic(err)
+		writer.WriteHeader(http.StatusBadRequest)
+	}
+
+	_, err = time.Parse("2006-01-02", request.Form.Get("date"))
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+	}
+	matched, err := regexp.Match("[a-zA-Z0-9\\s\\-]*", []byte(request.Form.Get("dinner")))
+	if err != nil || !matched {
+		writer.WriteHeader(http.StatusBadRequest)
+	}
+
+	err = m.db.Put([]byte(request.Form.Get("date")), []byte(request.Form.Get("dinner")), nil)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
 	m.serveDays(writer, request)
