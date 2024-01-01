@@ -19,6 +19,11 @@ RUN go build -o /meal-planning ./cmd
 # Deploy the application binary into a lean image
 FROM alpine:latest AS build-release-stage
 
+LABEL "org.opencontainers.image.source" "https://github.com/Untanky/meal-planning"
+LABEL "org.opencontainers.image.title" "Meal Planner"
+LABEL "org.opencontainers.image.description" "Self-contained, web-app to manage meal planning"
+LABEL "org.opencontainers.image.authors" "Lukas Grimm"
+
 WORKDIR /
 
 COPY --from=build-stage /meal-planning /meal-planning
