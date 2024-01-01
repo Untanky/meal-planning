@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 type MealPlanningHandler struct {
@@ -63,17 +64,20 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 		return
 	}
 
+	t := time.Now()
+	dayDuration := 24 * time.Hour
+	days := make([]day, 7)
+	for i, _ := range days {
+		days[i] = day{
+			t.Format("Monday"),
+			t.Format("02.01.2006"),
+		}
+		t = t.Add(dayDuration)
+	}
+
 	temp.Execute(
 		writer, &daysData{
-			Days: []day{
-				{"Monday", "01.01.2024"},
-				{"Tuesday", "02.01.2024"},
-				{"Wednesday", "03.01.2024"},
-				{"Thursday", "04.01.2024"},
-				{"Friday", "05.01.2024"},
-				{"Saturday", "06.01.2024"},
-				{"Sunday", "07.01.2024"},
-			},
+			Days: days,
 		},
 	)
 
