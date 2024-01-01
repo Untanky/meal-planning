@@ -1,24 +1,48 @@
-{{range .Days}}
-    <section class="border border-gray-700 rounded-xl text-center divide-y divide-gray-700">
-        <h2 class="text-lg p-4">
-            {{.DayOfTheWeek}}<br>
-            <span class="text-gray-700 text-base">{{.Date}}</span>
-        </h2>
-        <div class="p-4 bg-green-200 rounded-b-xl">
-            <div class="text-gray-700">
-                Dinner
+<div x-data="{ open: false }">
+    <main class="grid grid-cols-4 gap-4">
+        {{range .Days}}
+            <section class="border border-gray-700 rounded-xl text-center divide-y divide-gray-700">
+                <h2 class="text-lg p-4">
+                    {{.DayOfTheWeek}}<br>
+                    <span class="text-gray-700 text-base">{{.Date}}</span>
+                </h2>
+                <div class="p-4 bg-green-200 rounded-b-xl">
+                    <div class="text-gray-700">
+                        Dinner
+                    </div>
+                    <div class="text-xl font-bold ">
+                        {{.Dish}}
+                    </div>
+                </div>
+            </section>
+        {{end}}
+        <button class="w-full h-full border border-gray-700 rounded-xl flex flex-col items-center justify-center" @click="$refs.addDialog.showModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <span class="text-2xl font-semibold">
+                Add
+            </span>
+        </button>
+    </main>
+    <dialog x-ref="addDialog" class="w-[320px] border border-gray-700 p-8 rounded-xl backdrop backdrop-blur-lg">
+        <form class="flex flex-col space-y-4">
+            <p class="w-full text-left">
+                <label class="font-light text-gray-700" for="date">Date:</label><br>
+                <input class="w-full px-4 py-2 border border-gray-700 rounded-lg" id="date" type="date" name="date" >
+            </p>
+            <p class="w-full text-left">
+                <label class="font-light text-gray-700" for="dinner">Dinner:</label><br>
+                <input class="w-full px-4 py-2 border border-gray-700 rounded-lg" id="dinner" type="text" name="dinner" >
+            </p>
+            <div class="space-x-2 self-end">
+                <button value="cancel" formmethod="dialog" class="px-4 py-2 border border-gray-700 rounded-lg">
+                    Close
+                </button>
+                <button class="px-4 py-2 border border-gray-700 rounded-lg">
+                    Save
+                </button>
             </div>
-            <div class="text-xl font-bold ">
-                {{.Dish}}
-            </div>
-        </div>
-    </section>
-{{end}}
-<button class="border border-gray-700 rounded-xl flex flex-col items-center justify-center" hx-get="addDay">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-    <span class="text-2xl font-semibold">
-        Add
-    </span>
-</button>
+        </form>
+    </dialog>
+</div>

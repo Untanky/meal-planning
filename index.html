@@ -17,7 +17,7 @@
         <h1 class="text-3xl py-8 text-center">
             Meal Planner
         </h1>
-        <div class="grid grid-cols-4 gap-4" hx-get="/days" hx-swap="innerHtml" hx-trigger="load">
+        <div hx-get="/days" hx-swap="outerHtml" hx-trigger="load">
         </div>
     </main>
 </body>

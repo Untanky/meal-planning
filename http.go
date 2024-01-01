@@ -22,7 +22,6 @@ func NewMealPlanningHandler() (http.Handler, error) {
 
 	templates, err := template.ParseFiles(
 		"days.template.html",
-		"addDay.template.html",
 	)
 	if err != nil {
 		return nil, err
@@ -43,8 +42,6 @@ func (m *MealPlanningHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		m.serveIndexFile(writer, request)
 	case request.URL.Path == "/days" && request.Method == http.MethodGet:
 		m.serveDays(writer, request)
-	case request.URL.Path == "/addDay" && request.Method == http.MethodGet:
-		m.serveAddDay(writer, request)
 	}
 }
 
@@ -88,13 +85,6 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 			Days: days,
 		},
 	)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (m *MealPlanningHandler) serveAddDay(writer http.ResponseWriter, request *http.Request) {
-	err := m.templates.Lookup("addDay.template.html").Execute(writer, nil)
 	if err != nil {
 		panic(err)
 	}
