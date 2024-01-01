@@ -11,6 +11,7 @@ import (
 
 type MealPlanningHandler struct {
 	indexFile *os.File
+	templates *template.Template
 }
 
 func NewMealPlanningHandler() (http.Handler, error) {
@@ -19,8 +20,17 @@ func NewMealPlanningHandler() (http.Handler, error) {
 		return nil, err
 	}
 
+	templates, err := template.ParseFiles(
+		"days.template.html",
+		"addDay.template.html",
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	handler := &MealPlanningHandler{
 		indexFile: file,
+		templates: templates,
 	}
 
 	return handler, err
@@ -33,6 +43,8 @@ func (m *MealPlanningHandler) ServeHTTP(writer http.ResponseWriter, request *htt
 		m.serveIndexFile(writer, request)
 	case request.URL.Path == "/days" && request.Method == http.MethodGet:
 		m.serveDays(writer, request)
+	case request.URL.Path == "/addDay" && request.Method == http.MethodGet:
+		m.serveAddDay(writer, request)
 	}
 }
 
@@ -59,12 +71,6 @@ type daysData struct {
 }
 
 func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *http.Request) {
-	temp, err := template.ParseFiles("days.template.html")
-	if err != nil {
-		writer.WriteHeader(http.StatusNotFound)
-		return
-	}
-
 	t := time.Now()
 	dayDuration := 24 * time.Hour
 	days := make([]day, 7)
@@ -77,12 +83,18 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 		t = t.Add(dayDuration)
 	}
 
-	temp.Execute(
+	err := m.templates.Lookup("days.template.html").Execute(
 		writer, &daysData{
 			Days: days,
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
+}
 
+func (m *MealPlanningHandler) serveAddDay(writer http.ResponseWriter, request *http.Request) {
+	err := m.templates.Lookup("addDay.template.html").Execute(writer, nil)
 	if err != nil {
 		panic(err)
 	}
