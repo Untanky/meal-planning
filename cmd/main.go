@@ -1,13 +1,19 @@
 package main
 
 import (
+	"github.com/syndtr/goleveldb/leveldb"
 	meals "meal-planning"
 	"net"
 	"net/http"
 )
 
 func main() {
-	handler, err := meals.NewMealPlanningHandler()
+	db, err := leveldb.OpenFile("level.db", nil)
+	if err != nil {
+		panic(err)
+	}
+
+	handler, err := meals.NewMealPlanningHandler(db)
 	if err != nil {
 		panic(err)
 	}

@@ -2,6 +2,7 @@ package meals
 
 import (
 	"fmt"
+	"github.com/syndtr/goleveldb/leveldb"
 	"html/template"
 	"io"
 	"log"
@@ -13,9 +14,10 @@ import (
 type MealPlanningHandler struct {
 	indexFile *os.File
 	templates *template.Template
+	db        *leveldb.DB
 }
 
-func NewMealPlanningHandler() (http.Handler, error) {
+func NewMealPlanningHandler(db *leveldb.DB) (http.Handler, error) {
 	file, err := os.Open("index.html")
 	if err != nil {
 		return nil, err
@@ -31,6 +33,7 @@ func NewMealPlanningHandler() (http.Handler, error) {
 	handler := &MealPlanningHandler{
 		indexFile: file,
 		templates: templates,
+		db:        db,
 	}
 
 	return handler, err
