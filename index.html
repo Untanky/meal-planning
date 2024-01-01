@@ -11,10 +11,12 @@
 <body>
     <!-- TODO: replace with local version of htmx -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <h1 class="text-3xl">
-        Meal Planner
-    </h1>
-    <main class="grid grid-cols-7" hx-get="/days" hx-trigger="load" hx-swap="innerHtml">
+    <main class="w-[960px] mx-auto">
+        <h1 class="text-3xl py-8 text-center">
+            Meal Planner
+        </h1>
+        <div class="grid grid-cols-4 gap-4" hx-get="/days" hx-swap="innerHtml" hx-trigger="load">
+        </div>
     </main>
 </body>
 </html>

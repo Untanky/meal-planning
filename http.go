@@ -51,6 +51,7 @@ func (m *MealPlanningHandler) serveIndexFile(writer http.ResponseWriter, request
 type day struct {
 	DayOfTheWeek string
 	Date         string
+	Dish         string
 }
 
 type daysData struct {
@@ -71,6 +72,7 @@ func (m *MealPlanningHandler) serveDays(writer http.ResponseWriter, request *htt
 		days[i] = day{
 			t.Format("Monday"),
 			t.Format("02.01.2006"),
+			"Salad",
 		}
 		t = t.Add(dayDuration)
 	}
