@@ -44,7 +44,7 @@
                 <input class="w-full px-4 py-2 border border-gray-700 rounded-lg" id="dinner" type="text" name="dinner" >
             </p>
             <div class="self-end">
-                <button value="cancel" formmethod="dialog" class="mx-4 my-2 text-red-700 underline">
+                <button hx-get="/days" hx-target="#day-plan" class="mx-4 my-2 text-red-700 underline">
                     Close
                 </button>
                 <button class="px-4 py-2 border border-gray-700 rounded-lg">

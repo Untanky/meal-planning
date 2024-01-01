@@ -5,6 +5,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -111,15 +112,20 @@ func (m *MealPlanningHandler) putDay(writer http.ResponseWriter, request *http.R
 	err := request.ParseForm()
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	_, err = time.Parse("2006-01-02", request.Form.Get("date"))
 	if err != nil {
+		fmt.Println("Hello World", request.Form.Encode())
 		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	matched, err := regexp.Match("[a-zA-Z0-9\\s\\-]*", []byte(request.Form.Get("dinner")))
 	if err != nil || !matched {
+		log.Println("PARSE FAILED")
 		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	err = m.db.Put([]byte(request.Form.Get("date")), []byte(request.Form.Get("dinner")), nil)
