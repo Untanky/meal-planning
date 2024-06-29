@@ -8,7 +8,16 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"time"
 )
+
+type mealDay struct {
+	Date      time.Time
+	Breakfast string
+	Lunch     string
+	Dinner    string
+	Snacks    []string
+}
 
 func main() {
 	slog.Info("Starting application")
@@ -34,12 +43,22 @@ type handleIndex struct {
 	template *template.Template
 }
 
+type indexData struct {
+	Meals []mealDay
+}
+
 func (h *handleIndex) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	buffer := new(bytes.Buffer)
 	hash := md5.New()
 	multi := io.MultiWriter(hash, buffer)
 
-	err := h.template.ExecuteTemplate(multi, "index.gohtml", nil)
+	err := h.template.ExecuteTemplate(multi, "index.gohtml", indexData{
+		Meals: []mealDay{
+			{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
+			{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
+			{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
+		},
+	})
 	if err != nil {
 		http.Error(writer, "could not render template", http.StatusInternalServerError)
 	}

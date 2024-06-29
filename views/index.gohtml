@@ -6,5 +6,25 @@
 </head>
 <body>
     <h1>Meal Planning</h1>
+    <div>
+    {{ range .Meals }}
+        {{ template "meal-day" . }}
+    {{ end }}
+    </div>
 </body>
 </html>
+
+{{ define "meal-day" }}
+    <div>
+        {{ .Date.Format "Mon 02.01."}}
+    </div>
+    <div>
+        {{ .Breakfast }}
+    </div>
+    <div>
+        {{ .Lunch }}
+    </div>
+    <div>
+        {{ .Dinner }}
+    </div>
+{{ end }}
