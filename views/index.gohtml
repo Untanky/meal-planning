@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Meal Planning</title>
+    {{ range .Manifest.CssFiles }}<link blocking="render" rel="stylesheet" type="text/css" href="{{ . }}">{{ end }}
+    {{ range .Manifest.JsFiles }}<script src="{{ . }}"></script>{{ end }}
 </head>
 <body>
-    <h1>Meal Planning</h1>
+    <h1 class="text-4xl">Meal Planning</h1>
     <div>
     {{ range .Meals }}
         {{ template "meal-day" . }}

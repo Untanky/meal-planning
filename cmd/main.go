@@ -3,13 +3,25 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
+	"path"
 	"time"
 )
+
+type manifestFile struct {
+	OutputFiles []string
+}
+
+type manifest struct {
+	CssFiles []string
+	JsFiles  []string
+}
 
 type mealDay struct {
 	Date      time.Time
@@ -19,8 +31,35 @@ type mealDay struct {
 	Snacks    []string
 }
 
+var globalManifest manifest
+
 func main() {
 	slog.Info("Starting application")
+
+	slog.Info("Loading manifest")
+	file, err := os.OpenFile("./manifest.json", os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		slog.Error("Failed to open manifest.json", slog.Any("reason", err))
+		panic(err)
+	}
+
+	mFile := manifestFile{}
+	err = json.NewDecoder(file).Decode(&mFile)
+	if err != nil {
+		slog.Error("Failed to parse manifest.json", slog.Any("reason", err))
+		panic(err)
+	}
+
+	globalManifest = manifest{}
+	for _, file := range mFile.OutputFiles {
+		if path.Ext(file) == ".css" {
+			globalManifest.CssFiles = append(globalManifest.CssFiles, file)
+		} else if path.Ext(file) == ".js" {
+			globalManifest.JsFiles = append(globalManifest.JsFiles, file)
+		} else {
+			slog.Warn("Unknown file extension", slog.Any("file", file))
+		}
+	}
 
 	tmpl, err := template.ParseGlob("./views/*.gohtml")
 	if err != nil {
@@ -29,6 +68,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))))
 	mux.Handle("/", &handleIndex{template: tmpl})
 
 	slog.Info("Starting server")
@@ -44,7 +84,8 @@ type handleIndex struct {
 }
 
 type indexData struct {
-	Meals []mealDay
+	Manifest manifest
+	Meals    []mealDay
 }
 
 func (h *handleIndex) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -53,6 +94,7 @@ func (h *handleIndex) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 	multi := io.MultiWriter(hash, buffer)
 
 	err := h.template.ExecuteTemplate(multi, "index.gohtml", indexData{
+		Manifest: globalManifest,
 		Meals: []mealDay{
 			{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 			{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
