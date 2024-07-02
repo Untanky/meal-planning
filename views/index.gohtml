@@ -3,30 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <title>Meal Planning</title>
-    {{ range .Manifest.CssFiles }}<link blocking="render" rel="stylesheet" type="text/css" href="{{ . }}">{{ end }}
-    {{ range .Manifest.JsFiles }}<script src="{{ . }}"></script>{{ end }}
-</head>
-<body>
-    <h1 class="text-4xl">Meal Planning</h1>
-    <div>
-    {{ range .Meals }}
-        {{ template "meal-day" . }}
+    {{ range .Manifest.CssFiles }}
+    <link blocking="render" rel="stylesheet" type="text/css" href="{{ . }}">
     {{ end }}
+    {{ range .Manifest.JsFiles }}
+    <script defer src="{{ . }}"></script>
+    {{ end }}
+</head>
+<body class="bg-slate-50">
+    <h1 class="font-semibold text-4xl text-center my-8">Meal Planning</h1>
+    <div class="grid grid-cols-[auto_1fr_1fr_1fr_1fr_auto] gap-3 mx-8">
+        <div class="grid grid-cols-subgrid col-start-2 col-span-4">
+            <div class="font-light text-slate-700 text-lg">Breakfast</div>
+            <div class="font-light text-slate-700 text-lg">Lunch</div>
+            <div class="font-light text-slate-700 text-lg">Dinner</div>
+            <div class="font-light text-slate-700 text-lg">Snacks</div>
+        </div>
+        {{ template "meal-list" .Meals }}
     </div>
 </body>
 </html>
 
-{{ define "meal-day" }}
-    <div>
-        {{ .Date.Format "Mon 02.01."}}
-    </div>
-    <div>
-        {{ .Breakfast }}
-    </div>
-    <div>
-        {{ .Lunch }}
-    </div>
-    <div>
-        {{ .Dinner }}
-    </div>
+{{ define "meal-list" }}
+    {{ range . }}
+        <div id="meals-{{ .Date.Format "2006-01-02" }}" class="grid grid-cols-subgrid items-center col-span-6 bg-white p-3 rounded-xl">{{ template "meal-day" . }}</div>
+    {{ end }}
 {{ end }}
+
+{{ define "meal-day" }}
+    <div class="font-light text-slate-700 text-lg">
+        {{ .Date.Format "Mon 2.1." }}
+    </div>
+    {{ if .Breakfast }}
+        <div class="font-medium text-xl">
+            {{ .Breakfast }}
+        </div>
+    {{ else }}
+        {{ template "nothing-planned" }}
+    {{ end }}
+    {{ if .Lunch }}
+        <div class="font-medium text-xl">
+            {{ .Lunch }}
+        </div>
+    {{ else }}
+        {{ template "nothing-planned" }}
+    {{ end }}
+    {{ if .Dinner }}
+        <div class="font-medium text-xl">
+            {{ .Dinner }}
+        </div>
+    {{ else }}
+        {{ template "nothing-planned" }}
+    {{ end }}
+    {{ if .Snacks }}
+        <div class="font-medium text-xl">
+            {{ .Snacks }}
+        </div>
+    {{ else }}
+        {{ template "nothing-planned" }}
+    {{ end }}
+    <button
+            hx-get="/meals/form/{{ .Date.Format "2006-01-02" }}"
+            hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
+            class="update-plan-button bg-amber-200 text-amber-950 px-3 py-1 border border-amber-400 rounded-lg -my-1 transition-colors hover:bg-amber-300 hover:border-amber-500">
+        Edit
+    </button>
+{{ end }}
+
+{{ define "nothing-planned" }}<div class="font-light text-slate-700 text-base">Nothing planned</div>{{ end }}
