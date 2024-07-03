@@ -28,8 +28,6 @@ type mealDay struct {
 	Snacks    []string
 }
 
-var globalManifest manifest
-
 func main() {
 	slog.Info("Starting application")
 
@@ -47,12 +45,12 @@ func main() {
 		panic(err)
 	}
 
-	globalManifest = manifest{}
+	myManifest := manifest{}
 	for _, file := range mFile.OutputFiles {
 		if path.Ext(file) == ".css" {
-			globalManifest.CssFiles = append(globalManifest.CssFiles, file)
+			myManifest.CssFiles = append(myManifest.CssFiles, file)
 		} else if path.Ext(file) == ".js" {
-			globalManifest.JsFiles = append(globalManifest.JsFiles, file)
+			myManifest.JsFiles = append(myManifest.JsFiles, file)
 		} else {
 			slog.Warn("Unknown file extension", slog.Any("file", file))
 		}
@@ -64,8 +62,11 @@ func main() {
 		panic(err)
 	}
 
-	indexHandler := &handleIndex{template: tmpl}
-	mealHandler := &mealHandler{template: tmpl}
+	tmplHandler := templateHandler{
+		template: tmpl,
+	}
+	indexHandler := &indexHandler{templateHandler: tmplHandler, manifest: myManifest}
+	mealHandler := &mealHandler{templateHandler: tmplHandler}
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))))
@@ -83,8 +84,33 @@ func main() {
 	}
 }
 
-type handleIndex struct {
+type templateHandler struct {
 	template *template.Template
+}
+
+func (handler *templateHandler) serveTemplate(writer http.ResponseWriter, name string, data interface{}) {
+	bufferedWriter := myHttp.NewBufferedResponseWriter(writer)
+
+	err := handler.template.ExecuteTemplate(bufferedWriter, name, data)
+	if err != nil {
+		http.Error(writer, "could not render template", http.StatusInternalServerError)
+		return
+	}
+
+	header := writer.Header()
+	header.Add("Content-Type", "text/html; charset=utf-8")
+	header.Add("Cache-Control", "no-store")
+
+	err = bufferedWriter.Close()
+	if err != nil {
+		slog.Error("error writing response", slog.Any("reason", err))
+		panic(err)
+	}
+}
+
+type indexHandler struct {
+	templateHandler
+	manifest manifest
 }
 
 type indexData struct {
@@ -92,118 +118,43 @@ type indexData struct {
 	Meals    []mealDay
 }
 
-func (h *handleIndex) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	myWriter := myHttp.NewBufferedResponseWriter(writer)
-
-	err := h.template.ExecuteTemplate(myWriter, "index.gohtml", indexData{
-		Manifest: globalManifest,
+func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	h.serveTemplate(writer, "index.gohtml", indexData{
+		Manifest: h.manifest,
 		Meals: []mealDay{
 			{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 			{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
 			{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
 		},
 	})
-	if err != nil {
-		http.Error(writer, "could not render template", http.StatusInternalServerError)
-	}
-
-	header := writer.Header()
-	header.Add("Content-Type", "text/html; charset=utf-8")
-	header.Add("Cache-Control", "no-store")
-
-	err = myWriter.Close()
-	if err != nil {
-		slog.Error("error writing to response", slog.Any("reason", err))
-		panic(err)
-	}
 }
 
 type mealHandler struct {
-	template *template.Template
+	templateHandler
 }
 
 func (h *mealHandler) getMeals(writer http.ResponseWriter, request *http.Request) {
-	myWriter := myHttp.NewBufferedResponseWriter(writer)
-
-	err := h.template.ExecuteTemplate(myWriter, "meal-list", []mealDay{
+	h.serveTemplate(writer, "meal-list", []mealDay{
 		{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 		{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
 		{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
 	})
-	if err != nil {
-		http.Error(writer, "could not render template", http.StatusInternalServerError)
-	}
-
-	header := writer.Header()
-	header.Add("Content-Type", "text/html; charset=utf-8")
-	header.Add("Cache-Control", "no-store")
-
-	err = myWriter.Close()
-	if err != nil {
-		slog.Error("error writing to response", slog.Any("reason", err))
-		panic(err)
-	}
 }
 
 func (h *mealHandler) getMealByDate(writer http.ResponseWriter, request *http.Request) {
-	myWriter := myHttp.NewBufferedResponseWriter(writer)
-
-	err := h.template.ExecuteTemplate(myWriter, "meal-day", mealDay{
-		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
-	)
-	if err != nil {
-		http.Error(writer, "could not render template", http.StatusInternalServerError)
-	}
-
-	header := writer.Header()
-	header.Add("Content-Type", "text/html; charset=utf-8")
-	header.Add("Cache-Control", "no-store")
-
-	err = myWriter.Close()
-	if err != nil {
-		slog.Error("error writing to response", slog.Any("reason", err))
-		panic(err)
-	}
+	h.serveTemplate(writer, "meal-day", mealDay{
+		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{},
+	})
 }
 
 func (h *mealHandler) getMealFormByDate(writer http.ResponseWriter, request *http.Request) {
-	myWriter := myHttp.NewBufferedResponseWriter(writer)
-
-	err := h.template.ExecuteTemplate(myWriter, "meal-day-form", mealDay{
+	h.serveTemplate(writer, "meal-day-form", mealDay{
 		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 	)
-	if err != nil {
-		http.Error(writer, "could not render template", http.StatusInternalServerError)
-	}
-
-	header := writer.Header()
-	header.Add("Content-Type", "text/html; charset=utf-8")
-	header.Add("Cache-Control", "no-store")
-
-	err = myWriter.Close()
-	if err != nil {
-		slog.Error("error writing to response", slog.Any("reason", err))
-		panic(err)
-	}
 }
 
 func (h *mealHandler) updateMealByDate(writer http.ResponseWriter, request *http.Request) {
-	myWriter := myHttp.NewBufferedResponseWriter(writer)
-
-	err := h.template.ExecuteTemplate(myWriter, "meal-day", mealDay{
+	h.serveTemplate(writer, "meal-day", mealDay{
 		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 	)
-	if err != nil {
-		http.Error(writer, "could not render template", http.StatusInternalServerError)
-	}
-
-	header := writer.Header()
-	header.Add("Content-Type", "text/html; charset=utf-8")
-	header.Add("Cache-Control", "no-store")
-
-	err = myWriter.Close()
-	if err != nil {
-		slog.Error("error writing to response", slog.Any("reason", err))
-		panic(err)
-	}
 }

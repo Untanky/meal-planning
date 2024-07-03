@@ -68,7 +68,7 @@
                 hx-get="/meals/{{ .Date.Format "2006-01-02" }}/form"
                 hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
                 hx-swap="outerHTML"
-                class="update-plan-button bg-amber-200 text-amber-950 px-3 py-1 border border-amber-400 rounded-lg -my-1 transition-colors hover:bg-amber-300 hover:border-amber-500">
+                class="bg-amber-200 text-amber-950 px-3 py-1 border border-amber-300 rounded-lg -my-1 transition-colors hover:bg-amber-300 hover:border-amber-400">
             Edit
         </button>
     </div>
@@ -122,14 +122,14 @@
                     hx-put="/meals/{{ .Date.Format "2006-01-02" }}"
                     hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
                     hx-swap="outerHTML"
-                    class="px-3 py-1 border border-slate-400 rounded-lg -my-1 transition-colors hover:bg-slate-200 hover:border-slate-500">
+                    class="px-3 py-1 border border-slate-200 rounded-lg -my-1 transition-colors hover:bg-slate-100 hover:border-slate-300">
                 Cancel
             </button>
             <button
                     hx-put="/meals/{{ .Date.Format "2006-01-02" }}"
                     hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
                     hx-swap="outerHTML"
-                    class="bg-amber-200 text-amber-950 px-3 py-1 border border-amber-400 rounded-lg -my-1 transition-colors hover:bg-amber-300 hover:border-amber-500">
+                    class="bg-amber-200 text-amber-950 px-3 py-1 border border-amber-300 rounded-lg -my-1 transition-colors hover:bg-amber-300 hover:border-amber-400">
                 Save
             </button>
         </div>
