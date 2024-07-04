@@ -3,8 +3,15 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"meal-planning/domain"
+	"strings"
 	"time"
+)
+
+var (
+	NotFound        = errors.New("not found")
+	InsertionFailed = errors.New("insertion failed")
 )
 
 type mealDay struct {
@@ -18,8 +25,8 @@ type mealDay struct {
 type MealDayRepository interface {
 	FindByDate(ctx context.Context, date time.Time) (domain.MealDay, error)
 	FindByDateRange(ctx context.Context, start, end time.Time) ([]domain.MealDay, error)
-	Create(ctx context.Context, mealDay mealDay) (mealDay, error)
-	Update(ctx context.Context, mealDay mealDay) (mealDay, error)
+	Create(ctx context.Context, mealDay domain.MealDay) (domain.MealDay, error)
+	Update(ctx context.Context, mealDay domain.MealDay) (domain.MealDay, error)
 }
 
 type sqlMealDayRepository struct {
@@ -39,7 +46,9 @@ func (s sqlMealDayRepository) FindByDate(ctx context.Context, date time.Time) (d
 
 	day := new(mealDay)
 	err := row.Scan(&day.Date, &day.Breakfast, &day.Lunch, &day.Dinner, &day.Snacks)
-	if err != nil {
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.MealDay{}, NotFound
+	} else if err != nil {
 		return domain.MealDay{}, err
 	}
 
@@ -100,12 +109,22 @@ func (s sqlMealDayRepository) FindByDateRange(ctx context.Context, start, end ti
 	return list, nil
 }
 
-func (s sqlMealDayRepository) Create(ctx context.Context, mealDay mealDay) (mealDay, error) {
-	//TODO implement me
-	panic("implement me")
+func (s sqlMealDayRepository) Create(ctx context.Context, mealDay domain.MealDay) (domain.MealDay, error) {
+	_, err := s.db.ExecContext(ctx, `INSERT INTO meals VALUES (?, ?, ?, ?, ?)`, mealDay.Date.Format("2006-01-02"), mealDay.Breakfast, mealDay.Lunch, mealDay.Dinner, strings.Join(mealDay.Snacks, ","))
+
+	if err != nil {
+		return domain.MealDay{}, err
+	}
+
+	return mealDay, nil
 }
 
-func (s sqlMealDayRepository) Update(ctx context.Context, mealDay mealDay) (mealDay, error) {
-	//TODO implement me
-	panic("implement me")
+func (s sqlMealDayRepository) Update(ctx context.Context, mealDay domain.MealDay) (domain.MealDay, error) {
+	_, err := s.db.ExecContext(ctx, `UPDATE meals SET breakfast = ?, lunch = ?, dinner = ?, snacks = ? WHERE date = date(?)`, mealDay.Breakfast, mealDay.Lunch, mealDay.Dinner, strings.Join(mealDay.Snacks, ","), mealDay.Date.Format("2006-01-02"))
+
+	if err != nil {
+		return domain.MealDay{}, err
+	}
+
+	return mealDay, nil
 }

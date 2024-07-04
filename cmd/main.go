@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"html/template"
 	"log/slog"
 	"meal-planning/database"
@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -68,8 +69,15 @@ func main() {
 	tmplHandler := templateHandler{
 		template: tmpl,
 	}
-	indexHandler := &indexHandler{templateHandler: tmplHandler, manifest: myManifest}
-	mealHandler := &mealHandler{templateHandler: tmplHandler, mealDayRepo: mealDayRepo}
+	indexHandler := &indexHandler{
+		templateHandler: tmplHandler,
+		manifest:        myManifest,
+		mealDayRepo:     mealDayRepo,
+	}
+	mealHandler := &mealHandler{
+		templateHandler: tmplHandler,
+		mealDayRepo:     mealDayRepo,
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))))
@@ -113,7 +121,8 @@ func (handler *templateHandler) serveTemplate(writer http.ResponseWriter, name s
 
 type indexHandler struct {
 	templateHandler
-	manifest manifest
+	manifest    manifest
+	mealDayRepo database.MealDayRepository
 }
 
 type indexData struct {
@@ -122,13 +131,15 @@ type indexData struct {
 }
 
 func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	meals, err := h.mealDayRepo.FindByDateRange(context.TODO(), time.Date(2024, 7, 2, 0, 0, 0, 0, time.Local), time.Date(2024, 7, 6, 0, 0, 0, 0, time.Local))
+	if err != nil {
+		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		return
+	}
+
 	h.serveTemplate(writer, "index.gohtml", indexData{
 		Manifest: h.manifest,
-		Meals: []domain.MealDay{
-			{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
-			{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
-			{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
-		},
+		Meals:    meals,
 	})
 }
 
@@ -139,29 +150,84 @@ type mealHandler struct {
 
 func (h *mealHandler) getMeals(writer http.ResponseWriter, request *http.Request) {
 	meals, err := h.mealDayRepo.FindByDateRange(context.TODO(), time.Date(2024, 7, 2, 0, 0, 0, 0, time.Local), time.Date(2024, 7, 6, 0, 0, 0, 0, time.Local))
-	fmt.Println(meals, err)
+	if err != nil {
+		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		return
+	}
 
-	h.serveTemplate(writer, "meal-list", []domain.MealDay{
-		{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
-		{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
-		{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
-	})
+	h.serveTemplate(writer, "meal-list", meals)
 }
 
 func (h *mealHandler) getMealByDate(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-day", domain.MealDay{
-		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{},
-	})
+	dateString := request.PathValue("date")
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		http.Error(writer, "date must be an ISO date", http.StatusBadRequest)
+		return
+	}
+
+	meal, err := h.mealDayRepo.FindByDate(context.TODO(), date)
+	if err != nil {
+		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		return
+	}
+
+	h.serveTemplate(writer, "meal-day", meal)
 }
 
 func (h *mealHandler) getMealFormByDate(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-day-form", domain.MealDay{
-		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
-	)
+	dateString := request.PathValue("date")
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		http.Error(writer, "date must be an ISO date", http.StatusBadRequest)
+		return
+	}
+
+	meal, err := h.mealDayRepo.FindByDate(context.TODO(), date)
+	if err != nil {
+		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		return
+	}
+
+	h.serveTemplate(writer, "meal-day-form", meal)
 }
 
 func (h *mealHandler) updateMealByDate(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-day", domain.MealDay{
-		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
-	)
+	dateString := request.PathValue("date")
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		http.Error(writer, "date must be an ISO date", http.StatusBadRequest)
+		return
+	}
+
+	err = request.ParseForm()
+	if err != nil {
+		http.Error(writer, "could not parse form", http.StatusBadRequest)
+		return
+	}
+
+	meal, err := h.mealDayRepo.FindByDate(context.TODO(), date)
+	if err != nil && !errors.Is(err, database.NotFound) {
+		slog.Error("error retrieving meal days", slog.Any("reason", err))
+		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		return
+	}
+
+	if errors.Is(err, database.NotFound) {
+		meal, err = h.mealDayRepo.Create(context.TODO(), domain.MealDay{
+			Date:      date,
+			Breakfast: request.Form.Get("breakfast"),
+			Lunch:     request.Form.Get("lunch"),
+			Dinner:    request.Form.Get("dinner"),
+			Snacks:    strings.Split(request.Form.Get("snacks"), ","),
+		})
+	} else {
+		meal.Breakfast = request.Form.Get("breakfast")
+		meal.Lunch = request.Form.Get("lunch")
+		meal.Dinner = request.Form.Get("dinner")
+		meal.Snacks = strings.Split(request.Form.Get("snacks"), ",")
+		meal, err = h.mealDayRepo.Update(context.TODO(), meal)
+	}
+
+	h.serveTemplate(writer, "meal-day", meal)
 }
