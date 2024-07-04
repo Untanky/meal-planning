@@ -131,8 +131,14 @@ type indexData struct {
 }
 
 func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	meals, err := h.mealDayRepo.FindByDateRange(context.TODO(), time.Date(2024, 7, 2, 0, 0, 0, 0, time.Local), time.Date(2024, 7, 6, 0, 0, 0, 0, time.Local))
+	start := time.Now()
+	end := start.Add(7 * 24 * time.Hour)
+
+	slog.Info("Finding meals by date range", slog.String("start", start.Format("2006-01-02")), slog.String("end", end.Format("2006-01-02")))
+
+	meals, err := h.mealDayRepo.FindByDateRange(context.TODO(), start, end)
 	if err != nil {
+		slog.Error("error retrieving meals from repository", slog.Any("reason", err))
 		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
 		return
 	}
@@ -149,8 +155,14 @@ type mealHandler struct {
 }
 
 func (h *mealHandler) getMeals(writer http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+	end := start.Add(7 * 24 * time.Hour)
+
+	slog.Info("Finding meals by date range", slog.String("start", start.Format("2006-01-02")), slog.String("end", end.Format("2006-01-02")))
+
 	meals, err := h.mealDayRepo.FindByDateRange(context.TODO(), time.Date(2024, 7, 2, 0, 0, 0, 0, time.Local), time.Date(2024, 7, 6, 0, 0, 0, 0, time.Local))
 	if err != nil {
+		slog.Error("error retrieving meals from repository", slog.Any("reason", err))
 		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
 		return
 	}
@@ -162,13 +174,17 @@ func (h *mealHandler) getMealByDate(writer http.ResponseWriter, request *http.Re
 	dateString := request.PathValue("date")
 	date, err := time.Parse("2006-01-02", dateString)
 	if err != nil {
+		slog.Error("error parsing date", slog.Any("reason", err))
 		http.Error(writer, "date must be an ISO date", http.StatusBadRequest)
 		return
 	}
 
+	slog.Info("Finding meals by date", slog.String("date", dateString))
+
 	meal, err := h.mealDayRepo.FindByDate(context.TODO(), date)
 	if err != nil {
-		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		slog.Error("error retrieving meal from repository", slog.Any("reason", err))
+		http.Error(writer, "failed retrieving meal", http.StatusInternalServerError)
 		return
 	}
 
@@ -179,13 +195,17 @@ func (h *mealHandler) getMealFormByDate(writer http.ResponseWriter, request *htt
 	dateString := request.PathValue("date")
 	date, err := time.Parse("2006-01-02", dateString)
 	if err != nil {
+		slog.Error("error parsing date", slog.Any("reason", err))
 		http.Error(writer, "date must be an ISO date", http.StatusBadRequest)
 		return
 	}
 
+	slog.Info("Finding meals by date", slog.String("date", dateString))
+
 	meal, err := h.mealDayRepo.FindByDate(context.TODO(), date)
 	if err != nil {
-		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		slog.Error("error retrieving meal from repository", slog.Any("reason", err))
+		http.Error(writer, "failed retrieving meal", http.StatusInternalServerError)
 		return
 	}
 
@@ -196,15 +216,20 @@ func (h *mealHandler) updateMealByDate(writer http.ResponseWriter, request *http
 	dateString := request.PathValue("date")
 	date, err := time.Parse("2006-01-02", dateString)
 	if err != nil {
+		slog.Error("error parsing date", slog.Any("reason", err))
 		http.Error(writer, "date must be an ISO date", http.StatusBadRequest)
 		return
 	}
 
 	err = request.ParseForm()
 	if err != nil {
+		slog.Error("error parsing form", slog.Any("reason", err))
 		http.Error(writer, "could not parse form", http.StatusBadRequest)
 		return
 	}
+
+	slog.Info("Updating meals by date", slog.String("date", dateString))
+	slog.Debug("Finding meals for update by date", slog.String("date", dateString))
 
 	meal, err := h.mealDayRepo.FindByDate(context.TODO(), date)
 	if err != nil && !errors.Is(err, database.NotFound) {
@@ -214,6 +239,9 @@ func (h *mealHandler) updateMealByDate(writer http.ResponseWriter, request *http
 	}
 
 	if errors.Is(err, database.NotFound) {
+		slog.Debug("Meal does not exist", slog.String("date", dateString))
+		slog.Info("Creating meal", slog.String("date", dateString))
+
 		meal, err = h.mealDayRepo.Create(context.TODO(), domain.MealDay{
 			Date:      date,
 			Breakfast: request.Form.Get("breakfast"),
@@ -222,11 +250,19 @@ func (h *mealHandler) updateMealByDate(writer http.ResponseWriter, request *http
 			Snacks:    strings.Split(request.Form.Get("snacks"), ","),
 		})
 	} else {
+		slog.Info("Updating meal", slog.String("date", dateString))
+
 		meal.Breakfast = request.Form.Get("breakfast")
 		meal.Lunch = request.Form.Get("lunch")
 		meal.Dinner = request.Form.Get("dinner")
 		meal.Snacks = strings.Split(request.Form.Get("snacks"), ",")
 		meal, err = h.mealDayRepo.Update(context.TODO(), meal)
+	}
+
+	if err != nil {
+		slog.Error("error updating meal", slog.Any("reason", err))
+		http.Error(writer, "failed updating meal", http.StatusInternalServerError)
+		return
 	}
 
 	h.serveTemplate(writer, "meal-day", meal)
