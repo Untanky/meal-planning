@@ -122,7 +122,7 @@ func (handler *templateHandler) serveTemplate(writer http.ResponseWriter, name s
 type indexHandler struct {
 	templateHandler
 	manifest    manifest
-	mealDayRepo database.MealDayRepository
+	mealDayRepo domain.MealDayRepository
 }
 
 type indexData struct {
@@ -151,7 +151,7 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 
 type mealHandler struct {
 	templateHandler
-	mealDayRepo database.MealDayRepository
+	mealDayRepo domain.MealDayRepository
 }
 
 func (h *mealHandler) getMeals(writer http.ResponseWriter, request *http.Request) {

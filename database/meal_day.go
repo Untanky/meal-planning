@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	NotFound        = errors.New("not found")
-	InsertionFailed = errors.New("insertion failed")
+	NotFound = errors.New("not found")
 )
 
 type mealDay struct {
@@ -22,18 +21,11 @@ type mealDay struct {
 	Snacks    *string
 }
 
-type MealDayRepository interface {
-	FindByDate(ctx context.Context, date time.Time) (domain.MealDay, error)
-	FindByDateRange(ctx context.Context, start, end time.Time) ([]domain.MealDay, error)
-	Create(ctx context.Context, mealDay domain.MealDay) (domain.MealDay, error)
-	Update(ctx context.Context, mealDay domain.MealDay) (domain.MealDay, error)
-}
-
 type sqlMealDayRepository struct {
 	db *sql.DB
 }
 
-func NewSqlMealDayRepository(db *sql.DB) MealDayRepository {
+func NewSqlMealDayRepository(db *sql.DB) domain.MealDayRepository {
 	return &sqlMealDayRepository{db}
 }
 
