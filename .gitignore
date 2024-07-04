@@ -232,3 +232,5 @@ dist
 # Go workspace file
 go.work
 
+# SQLite Database files
+data/

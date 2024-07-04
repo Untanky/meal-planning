@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log/slog"
+	"meal-planning/database"
+	"meal-planning/domain"
 	myHttp "meal-planning/http"
 	"net/http"
 	"os"
@@ -20,16 +24,15 @@ type manifest struct {
 	JsFiles  []string
 }
 
-type mealDay struct {
-	Date      time.Time
-	Breakfast string
-	Lunch     string
-	Dinner    string
-	Snacks    []string
-}
-
 func main() {
 	slog.Info("Starting application")
+
+	slog.Info("Connecting to database")
+	db := connectDatabase()
+	defer db.Close()
+	migrateDatabase(db)
+
+	mealDayRepo := database.NewSqlMealDayRepository(db)
 
 	slog.Info("Loading manifest")
 	file, err := os.OpenFile("./manifest.json", os.O_RDONLY, os.ModePerm)
@@ -66,7 +69,7 @@ func main() {
 		template: tmpl,
 	}
 	indexHandler := &indexHandler{templateHandler: tmplHandler, manifest: myManifest}
-	mealHandler := &mealHandler{templateHandler: tmplHandler}
+	mealHandler := &mealHandler{templateHandler: tmplHandler, mealDayRepo: mealDayRepo}
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))))
@@ -115,13 +118,13 @@ type indexHandler struct {
 
 type indexData struct {
 	Manifest manifest
-	Meals    []mealDay
+	Meals    []domain.MealDay
 }
 
 func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	h.serveTemplate(writer, "index.gohtml", indexData{
 		Manifest: h.manifest,
-		Meals: []mealDay{
+		Meals: []domain.MealDay{
 			{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 			{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
 			{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
@@ -131,10 +134,14 @@ func (h *indexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 
 type mealHandler struct {
 	templateHandler
+	mealDayRepo database.MealDayRepository
 }
 
 func (h *mealHandler) getMeals(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-list", []mealDay{
+	meals, err := h.mealDayRepo.FindByDateRange(context.TODO(), time.Date(2024, 7, 2, 0, 0, 0, 0, time.Local), time.Date(2024, 7, 6, 0, 0, 0, 0, time.Local))
+	fmt.Println(meals, err)
+
+	h.serveTemplate(writer, "meal-list", []domain.MealDay{
 		{time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 		{time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local), "", "", "Pasta", []string{}},
 		{time.Date(2024, 6, 31, 0, 0, 0, 0, time.Local), "", "", "Burger", []string{}},
@@ -142,19 +149,19 @@ func (h *mealHandler) getMeals(writer http.ResponseWriter, request *http.Request
 }
 
 func (h *mealHandler) getMealByDate(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-day", mealDay{
+	h.serveTemplate(writer, "meal-day", domain.MealDay{
 		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{},
 	})
 }
 
 func (h *mealHandler) getMealFormByDate(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-day-form", mealDay{
+	h.serveTemplate(writer, "meal-day-form", domain.MealDay{
 		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 	)
 }
 
 func (h *mealHandler) updateMealByDate(writer http.ResponseWriter, request *http.Request) {
-	h.serveTemplate(writer, "meal-day", mealDay{
+	h.serveTemplate(writer, "meal-day", domain.MealDay{
 		time.Date(2024, 6, 29, 0, 0, 0, 0, time.Local), "", "", "Pizza", []string{}},
 	)
 }
