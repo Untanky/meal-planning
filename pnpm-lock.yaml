@@ -12,6 +12,9 @@ importers:
         specifier: ^1.9.12
         version: 1.9.12
     devDependencies:
+      '@esbuild/linux-arm64':
+        specifier: ^0.21.5
+        version: 0.21.5
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.39)
@@ -745,8 +748,7 @@ snapshots:
   '@esbuild/freebsd-x64@0.21.5':
     optional: true
 
-  '@esbuild/linux-arm64@0.21.5':
-    optional: true
+  '@esbuild/linux-arm64@0.21.5': {}
 
   '@esbuild/linux-arm@0.21.5':
     optional: true
