@@ -13,9 +13,9 @@ COPY . .
 
 RUN npx pnpm install
 
-RUN make clean build
+RUN make build
 
-FROM alpine as release
+FROM alpine AS release
 
 WORKDIR /app
 
@@ -25,4 +25,4 @@ VOLUME /data
 
 EXPOSE 8080
 
-ENTRYPOINT /app/meal-planner
+ENTRYPOINT ["/app/meal-planner"]

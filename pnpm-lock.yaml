@@ -15,6 +15,9 @@ importers:
       '@esbuild/linux-arm64':
         specifier: ^0.21.5
         version: 0.21.5
+      '@esbuild/linux-x64':
+        specifier: ^0.21.5
+        version: 0.21.5
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.39)
@@ -88,7 +91,6 @@ packages:
   '@esbuild/linux-arm64@0.21.5':
     resolution: {integrity: sha512-ibKvmyYzKsBeX8d8I7MH/TMfWDXBF3db4qM6sy+7re0YXya+K1cem3on9XgdT2EQGMu4hQyZhan7TeQ8XkGp4Q==}
     engines: {node: '>=12'}
-    cpu: [arm64]
     os: [linux]
 
   '@esbuild/linux-arm@0.21.5':
@@ -136,7 +138,6 @@ packages:
   '@esbuild/linux-x64@0.21.5':
     resolution: {integrity: sha512-1rYdTpyv03iycF1+BhzrzQJCdOuAOtaqHTWJZCWvijKD2N5Xu0TtVC8/+1faWqcP9iBCWOmjmhoH94dH82BxPQ==}
     engines: {node: '>=12'}
-    cpu: [x64]
     os: [linux]
 
   '@esbuild/netbsd-x64@0.21.5':
@@ -771,8 +772,7 @@ snapshots:
   '@esbuild/linux-s390x@0.21.5':
     optional: true
 
-  '@esbuild/linux-x64@0.21.5':
-    optional: true
+  '@esbuild/linux-x64@0.21.5': {}
 
   '@esbuild/netbsd-x64@0.21.5':
     optional: true
