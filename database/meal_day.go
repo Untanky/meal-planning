@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-var (
-	NotFound = errors.New("not found")
-)
-
 type mealDay struct {
 	Date      string
 	Breakfast string
@@ -39,7 +35,7 @@ func (s sqlMealDayRepository) FindByDate(ctx context.Context, date time.Time) (d
 	day := new(mealDay)
 	err := row.Scan(&day.Date, &day.Breakfast, &day.Lunch, &day.Dinner, &day.Snacks)
 	if errors.Is(err, sql.ErrNoRows) {
-		return domain.MealDay{}, NotFound
+		return domain.MealDay{}, domain.MealNotFound
 	} else if err != nil {
 		return domain.MealDay{}, err
 	}
