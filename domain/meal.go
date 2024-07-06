@@ -49,7 +49,7 @@ func (service *MealDayService) FindByDateRange(ctx context.Context, start, end t
 		}
 
 		for _, dbMeal := range dbMeals {
-			if dbMeal.Date == day {
+			if dbMeal.Date.Format("2006-01-02") == day.Format("2006-01-02") {
 				meal = dbMeal
 			}
 		}
@@ -64,6 +64,12 @@ func (service *MealDayService) FindByDate(ctx context.Context, date time.Time) (
 	slog.Info("Finding meals by date", slog.String("date", date.Format("2006-01-02")))
 
 	meal, err := service.repository.FindByDate(ctx, date)
+	if errors.Is(MealNotFound, err) {
+		return MealDay{
+			Date: date,
+		}, nil
+	}
+
 	if err != nil {
 		return MealDay{}, err
 	}
