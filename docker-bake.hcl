@@ -1,16 +1,12 @@
-variable "TAG" {
-  default = "latest"
-}
+target "docker-metadata-action" {}
 
-group "default" {
-  targets = ["meal-planning"]
-}
-
-target "meal-planning" {
+target "meal-planner" {
+  inherits = ["docker-metadata-action"]
+  context    = "./"
   dockerfile = "Dockerfile"
-  platforms = ["linux/amd64", "linux/arm64"]
-  tags = [
-    "ghcr.io/untanky/meal-planning:${TAG}"
+  platforms = [
+    "linux/amd64",
+    "linux/arm64",
   ]
   labels = {
     "org.opencontainers.image.version" = "latest"
