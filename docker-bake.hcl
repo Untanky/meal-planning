@@ -8,4 +8,7 @@ target "meal-planner" {
     "linux/amd64",
     "linux/arm64",
   ]
+  labels = {
+    "org.opencontainers.image.version" = "latest"
+  }
 }
