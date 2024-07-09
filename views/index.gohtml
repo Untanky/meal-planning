@@ -91,6 +91,9 @@
 
 {{ define "meal-day-form" }}
     <form id="meals-{{ .Date.Format "2006-01-02" }}"
+          hx-put="/meals/{{ .Date.Format "2006-01-02" }}"
+          hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
+          hx-swap="outerHTML"
           class="sm:grid sm:grid-cols-subgrid items-center sm:col-span-6 bg-white p-3 rounded-xl">
         <div class="font-light text-slate-700 text-lg">
             {{ .Date.Format "Mon 2.1." }}
@@ -145,13 +148,12 @@
                     hx-get="/meals/{{ .Date.Format "2006-01-02" }}"
                     hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
                     hx-swap="outerHTML"
+                    type="button"
                     class="px-3 py-1 border border-slate-200 rounded-lg -my-1 transition-colors hover:bg-slate-100 hover:border-slate-300">
                 Cancel
             </button>
             <button
-                    hx-put="/meals/{{ .Date.Format "2006-01-02" }}"
-                    hx-target="#meals-{{ .Date.Format "2006-01-02" }}"
-                    hx-swap="outerHTML"
+                    type="submit"
                     class="bg-amber-200 text-amber-950 px-3 py-1 border border-amber-300 rounded-lg -my-1 transition-colors hover:bg-amber-300 hover:border-amber-400">
                 Save
             </button>
