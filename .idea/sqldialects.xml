@@ -2,7 +2,7 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/cmd/database.go" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/database/meal_day.go" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/database/meal.go" dialect="GenericSQL" />
     <file url="PROJECT" dialect="SQLite" />
   </component>
 </project>
