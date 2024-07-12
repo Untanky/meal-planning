@@ -93,7 +93,7 @@ func (service *MealDayService) Upsert(ctx context.Context, mealDay MealDay) (Mea
 	} else {
 		slog.Info("Updating meal", slog.String("date", mealDay.Date.Format("2006-01-02")))
 
-		meal, err = service.repository.Update(ctx, meal)
+		meal, err = service.repository.Update(ctx, mealDay)
 	}
 
 	return meal, err
