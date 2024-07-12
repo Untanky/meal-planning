@@ -11,6 +11,8 @@ const (
 	CaloriesPerKilogramBodyFat = 7700
 )
 
+var NutritionNotFound = errors.New("nutrition not found")
+
 type Nutrition struct {
 	Date     time.Time
 	Calories *int
@@ -96,11 +98,11 @@ func (service *NutritionService) Upsert(ctx context.Context, nutrition Nutrition
 	slog.Info("Upserting dbNutrition", slog.String("date", nutrition.Date.Format("2006-01-02")))
 
 	dbNutrition, err := service.repository.FindByDate(ctx, nutrition.Date)
-	if err != nil && !errors.Is(err, MealNotFound) {
+	if err != nil && !errors.Is(err, NutritionNotFound) {
 		return Nutrition{}, err
 	}
 
-	if errors.Is(err, MealNotFound) {
+	if errors.Is(err, NutritionNotFound) {
 		slog.Debug("Nutrition does not exist", slog.String("date", nutrition.Date.Format("2006-01-02")))
 		slog.Info("Creating Nutrition", slog.String("date", nutrition.Date.Format("2006-01-02")))
 
