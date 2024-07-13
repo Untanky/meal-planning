@@ -115,6 +115,7 @@ func (handler *templateHandler) serveTemplate(writer http.ResponseWriter, name s
 
 	err := handler.template.ExecuteTemplate(bufferedWriter, name, data)
 	if err != nil {
+		slog.Error("Error executing template", slog.Any("reason", err))
 		http.Error(writer, "could not render template", http.StatusInternalServerError)
 		return
 	}

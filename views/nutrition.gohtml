@@ -13,45 +13,57 @@
 </head>
 <body class="bg-slate-50">
 <h1 class="font-semibold text-4xl text-center my-8">Nutrition</h1>
-<ul class="max-w-[400px] flex flex-col mx-auto space-y-4">
-    <li>
-        <div class="bg-white p-5 rounded-xl shadow-md">
-            <h3 class="font-medium text-slate-700">20.08.2024 - Tuesday</h3>
-            <form class="grid grid-cols-[1fr_1fr_auto] mt-3.5 space-x-4">
-                <div class="relative">
-                    <label class="block font-light mb-0.5" for="calories-2020-08-20">
-                        Calories
-                    </label>
-                    <input
-                            id="calories-2020-08-20"
-                            class="inline-block w-full text-right py-2 pl-3 pr-12 border border-slate-700 rounded-lg"
-                            type="number"
-                            name="calories"
-                    >
-                    <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
-                        kCal
-                    </span>
-                </div>
-                <div class="relative">
-                    <label class="block font-light mb-0.5" for="weight-2020-08-20">
-                        Weight
-                    </label>
-                    <input
-                            id="weight-2020-08-20"
-                            class="inline-block w-full text-right py-2 pl-3 pr-[34px] border border-slate-700 rounded-lg"
-                            type="number"
-                            name="weight"
-                    >
-                    <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
-                        kg
-                    </span>
-                </div>
-                <button class="bg-amber-200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
-                    Save
-                </button>
-            </form>
-        </div>
-    </li>
-</ul>
+{{ template "nutrition-list" .NutritionEntries }}
 </body>
 </html>
+
+{{ define "nutrition-list" }}
+    <ul class="max-w-[400px] flex flex-col mx-auto space-y-4">
+        {{ range . }}
+        <li>
+            {{ template "nutrition-entry" . }}
+        </li>
+        {{ end }}
+    </ul>
+{{ end }}
+
+{{ define "nutrition-entry" }}
+    <div class="bg-white p-5 rounded-xl shadow-md">
+        <h3 class="font-medium text-slate-700">{{ .Date.Format "02.01.2006 - Monday" }}</h3>
+        <form class="grid grid-cols-[1fr_1fr_auto] mt-3.5 space-x-4">
+            <div class="relative">
+                <label class="block font-light mb-0.5" for="calories-{{ .Date.Format "2006-01-02" }}">
+                    Calories
+                </label>
+                <input
+                        id="calories-{{ .Date.Format "2006-01-02" }}"
+                        class="inline-block w-full text-right py-2 pl-3 pr-12 border border-slate-700 rounded-lg"
+                        type="number"
+                        name="calories"
+                        {{ if .Calories }}value="{{.Calories}}"{{ end }}
+                >
+                <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
+                        kCal
+                    </span>
+            </div>
+            <div class="relative">
+                <label class="block font-light mb-0.5" for="weight-{{ .Date.Format "2006-01-02" }}">
+                    Weight
+                </label>
+                <input
+                        id="weight-{{ .Date.Format "2006-01-02" }}"
+                        class="inline-block w-full text-right py-2 pl-3 pr-[34px] border border-slate-700 rounded-lg"
+                        type="number"
+                        name="weight"
+                        {{ if .Weight }}value="{{ .Weight }}"{{ end }}
+                >
+                <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
+                        kg
+                    </span>
+            </div>
+            <button class="bg-amber-200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
+                Save
+            </button>
+        </form>
+    </div>
+{{ end }}

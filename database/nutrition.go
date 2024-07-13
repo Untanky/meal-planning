@@ -10,8 +10,8 @@ import (
 
 type nutritionEntity struct {
 	date     string
-	calories *int
-	weight   *int
+	calories sql.NullInt64
+	weight   sql.NullInt64
 }
 
 type sqlNutritionRepository struct {
@@ -44,16 +44,75 @@ func (s *sqlNutritionRepository) FindByDate(ctx context.Context, date time.Time)
 		return domain.Nutrition{}, err
 	}
 
+	var calories *int
+	if entity.calories.Valid {
+		temp := int(entity.calories.Int64)
+		calories = &temp
+	}
+
+	var weight *int
+	if entity.weight.Valid {
+		temp := int(entity.weight.Int64)
+		weight = &temp
+	}
+
 	return domain.Nutrition{
 		Date:     parsedDate,
-		Calories: entity.calories,
-		Weight:   entity.weight,
+		Calories: calories,
+		Weight:   weight,
 	}, nil
 }
 
 func (s *sqlNutritionRepository) FindByDateRange(ctx context.Context, start, end time.Time) ([]domain.Nutrition, error) {
-	//TODO implement me
-	panic("implement me")
+	rows, err := s.db.QueryContext(
+		ctx,
+		"SELECT * FROM nutrition WHERE date >= date(?) AND date <= date(?)",
+		start.Format("2006-01-02"),
+		end.Format("2006-01-02"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]domain.Nutrition, 0)
+	for rows.Next() {
+		entity := nutritionEntity{}
+		err = rows.Scan(&entity.date, &entity.calories, &entity.weight)
+		if err != nil {
+			return nil, err
+		}
+
+		date, err := time.Parse("2006-01-02", entity.date)
+		if err != nil {
+			return nil, err
+		}
+
+		var calories *int
+		if entity.calories.Valid {
+			temp := int(entity.calories.Int64)
+			calories = &temp
+		}
+
+		var weight *int
+		if entity.weight.Valid {
+			temp := int(entity.weight.Int64)
+			weight = &temp
+		}
+
+		list = append(list, domain.Nutrition{
+			Date:     date,
+			Calories: calories,
+			Weight:   weight,
+		})
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
 }
 
 func (s *sqlNutritionRepository) FindAverageNutrition(ctx context.Context, start, end time.Time) (domain.AverageNutrition, error) {
