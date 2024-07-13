@@ -35,6 +35,9 @@ func main() {
 	mealDayRepo := database.NewSqlMealDayRepository(db)
 	mealDayService := domain.NewMealDayService(mealDayRepo)
 
+	nutritionRepo := database.NewSqlNutritionRepository(db)
+	nutritionService := domain.NewNutritionService(nutritionRepo)
+
 	slog.Info("Loading manifest")
 	file, err := os.OpenFile("./manifest.json", os.O_RDONLY, os.ModePerm)
 	if err != nil {
@@ -74,6 +77,13 @@ func main() {
 		manifest:        myManifest,
 		mealDayService:  mealDayService,
 	}
+
+	nutritionHandler := &nutritionHandler{
+		templateHandler:  tmplHandler,
+		manifest:         myManifest,
+		nutritionService: nutritionService,
+	}
+
 	mealHandler := &mealHandler{
 		templateHandler: tmplHandler,
 		mealDayService:  mealDayService,
@@ -86,6 +96,7 @@ func main() {
 	mux.HandleFunc("PUT /meals/{date}", mealHandler.updateMealByDate)
 	mux.HandleFunc("GET /meals/{date}/form", mealHandler.getMealFormByDate)
 	mux.Handle("/", indexHandler)
+	mux.Handle("/nutrition", nutritionHandler)
 
 	slog.Info("Starting server")
 	err = http.ListenAndServe(":8080", mux)
