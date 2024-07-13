@@ -95,8 +95,10 @@ func main() {
 	mux.HandleFunc("GET /meals/{date}", mealHandler.getMealByDate)
 	mux.HandleFunc("PUT /meals/{date}", mealHandler.updateMealByDate)
 	mux.HandleFunc("GET /meals/{date}/form", mealHandler.getMealFormByDate)
-	mux.Handle("/", indexHandler)
+	mux.HandleFunc("PUT /nutrition/{date}", nutritionHandler.updateNutritionEntry)
+
 	mux.Handle("/nutrition", nutritionHandler)
+	mux.Handle("/", indexHandler)
 
 	slog.Info("Starting server")
 	err = http.ListenAndServe(":8080", mux)

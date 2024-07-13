@@ -20,17 +20,20 @@
 {{ define "nutrition-list" }}
     <ul class="max-w-[400px] flex flex-col mx-auto space-y-4">
         {{ range . }}
-        <li>
-            {{ template "nutrition-entry" . }}
-        </li>
+            <li>
+                {{ template "nutrition-entry" . }}
+            </li>
         {{ end }}
     </ul>
 {{ end }}
 
 {{ define "nutrition-entry" }}
-    <div class="bg-white p-5 rounded-xl shadow-md">
+    <div id="nutrition-{{ .Date.Format "2006-01-02" }}" class="bg-white p-5 rounded-xl shadow-md">
         <h3 class="font-medium text-slate-700">{{ .Date.Format "02.01.2006 - Monday" }}</h3>
-        <form class="grid grid-cols-[1fr_1fr_auto] mt-3.5 space-x-4">
+        <form hx-put="/nutrition/{{ .Date.Format "2006-01-02" }}"
+              hx-target="#nutrition-{{ .Date.Format "2006-01-02" }}"
+              hx-swap="outerHTML"
+              class="grid grid-cols-[1fr_1fr_auto] mt-3.5 space-x-4">
             <div class="relative">
                 <label class="block font-light mb-0.5" for="calories-{{ .Date.Format "2006-01-02" }}">
                     Calories

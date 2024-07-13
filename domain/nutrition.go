@@ -15,8 +15,8 @@ var NutritionNotFound = errors.New("nutrition not found")
 
 type Nutrition struct {
 	Date     time.Time
-	Calories *int
-	Weight   *int
+	Calories int
+	Weight   int
 }
 
 type AverageNutrition struct {
@@ -63,8 +63,8 @@ func (service *NutritionService) FindByDateRange(ctx context.Context, start, end
 	for day := start; day.Before(end); day = day.AddDate(0, 0, 1) {
 		nutrition := Nutrition{
 			Date:     day,
-			Calories: nil,
-			Weight:   nil,
+			Calories: 0,
+			Weight:   0,
 		}
 
 		for _, dbNutrition := range dbNutritionList {

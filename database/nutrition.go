@@ -44,16 +44,14 @@ func (s *sqlNutritionRepository) FindByDate(ctx context.Context, date time.Time)
 		return domain.Nutrition{}, err
 	}
 
-	var calories *int
+	var calories int
 	if entity.calories.Valid {
-		temp := int(entity.calories.Int64)
-		calories = &temp
+		calories = int(entity.calories.Int64)
 	}
 
-	var weight *int
+	var weight int
 	if entity.weight.Valid {
-		temp := int(entity.weight.Int64)
-		weight = &temp
+		weight = int(entity.weight.Int64)
 	}
 
 	return domain.Nutrition{
@@ -88,16 +86,14 @@ func (s *sqlNutritionRepository) FindByDateRange(ctx context.Context, start, end
 			return nil, err
 		}
 
-		var calories *int
+		var calories int
 		if entity.calories.Valid {
-			temp := int(entity.calories.Int64)
-			calories = &temp
+			calories = int(entity.calories.Int64)
 		}
 
-		var weight *int
+		var weight int
 		if entity.weight.Valid {
-			temp := int(entity.weight.Int64)
-			weight = &temp
+			weight = int(entity.weight.Int64)
 		}
 
 		list = append(list, domain.Nutrition{
@@ -121,13 +117,43 @@ func (s *sqlNutritionRepository) FindAverageNutrition(ctx context.Context, start
 }
 
 func (s *sqlNutritionRepository) Create(ctx context.Context, n domain.Nutrition) (domain.Nutrition, error) {
-	//TODO implement me
-	panic("implement me")
+	calories := sql.NullInt64{
+		Int64: int64(n.Calories),
+		Valid: n.Calories > 0,
+	}
+
+	weight := sql.NullInt64{
+		Int64: int64(n.Weight),
+		Valid: n.Weight > 0,
+	}
+
+	_, err := s.db.ExecContext(ctx, `INSERT INTO nutrition VALUES (?, ?, ?)`, n.Date.Format("2006-01-02"), calories, weight)
+
+	if err != nil {
+		return domain.Nutrition{}, err
+	}
+
+	return n, nil
 }
 
 func (s *sqlNutritionRepository) Update(ctx context.Context, n domain.Nutrition) (domain.Nutrition, error) {
-	//TODO implement me
-	panic("implement me")
+	calories := sql.NullInt64{
+		Int64: int64(n.Calories),
+		Valid: n.Calories > 0,
+	}
+
+	weight := sql.NullInt64{
+		Int64: int64(n.Weight),
+		Valid: n.Weight > 0,
+	}
+
+	_, err := s.db.ExecContext(ctx, `UPDATE nutrition SET calories = ?, weight = ? WHERE date = date(?)`, calories, weight, n.Date.Format("2006-01-02"), calories, weight)
+
+	if err != nil {
+		return domain.Nutrition{}, err
+	}
+
+	return n, nil
 }
 
 func (s *sqlNutritionRepository) Delete(ctx context.Context, n domain.Nutrition) error {
