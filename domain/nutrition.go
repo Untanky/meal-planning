@@ -60,7 +60,7 @@ func (service *NutritionService) FindByDateRange(ctx context.Context, start, end
 		return nil, err
 	}
 
-	for day := start; day.Before(end); day = day.AddDate(0, 0, 1) {
+	for day := end; day.After(start); day = day.AddDate(0, 0, -1) {
 		nutrition := Nutrition{
 			Date:     day,
 			Calories: 0,

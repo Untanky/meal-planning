@@ -33,7 +33,7 @@
         <form hx-put="/nutrition/{{ .Date.Format "2006-01-02" }}"
               hx-target="#nutrition-{{ .Date.Format "2006-01-02" }}"
               hx-swap="outerHTML"
-              class="grid grid-cols-[1fr_1fr_auto] mt-3.5 space-x-4">
+              class="grid grid-cols-[1fr_1fr_auto] mt-1.5 space-x-4">
             <div class="relative">
                 <label class="block font-light mb-0.5" for="calories-{{ .Date.Format "2006-01-02" }}">
                     Calories
@@ -46,8 +46,8 @@
                         {{ if .Calories }}value="{{.Calories}}"{{ end }}
                 >
                 <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
-                        kCal
-                    </span>
+                    kCal
+                </span>
             </div>
             <div class="relative">
                 <label class="block font-light mb-0.5" for="weight-{{ .Date.Format "2006-01-02" }}">
@@ -61,10 +61,10 @@
                         {{ if .Weight }}value="{{ .Weight }}"{{ end }}
                 >
                 <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
-                        kg
-                    </span>
+                    kg
+                </span>
             </div>
-            <button class="bg-amber-200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
+            <button class="bg-amber -200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
                 Save
             </button>
         </form>
