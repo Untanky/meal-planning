@@ -123,8 +123,8 @@ func (service *NutritionService) Delete(ctx context.Context, n Nutrition) error 
 }
 
 func (service *NutritionService) CalculateTotalDailyEnergyExpenditure(ctx context.Context, start, end time.Time) (TotalDailyEnergyExpenditure, error) {
-	previousPeriodStart := end.Add(-1 * 24 * time.Hour)
-	previousPeriodEnd := previousPeriodStart.Add(-end.Sub(start))
+	previousPeriodStart := start.Add(-7 * 24 * time.Hour)
+	previousPeriodEnd := previousPeriodStart.Add(end.Sub(start))
 
 	slog.Info("Calculating total daily energy expenditure")
 
@@ -141,11 +141,11 @@ func (service *NutritionService) CalculateTotalDailyEnergyExpenditure(ctx contex
 	}
 
 	weightDifference := currentAverage.Weight - previousAverage.Weight
-	averageCalorieDifference := weightDifference * CaloriesPerKilogramBodyFat
+	averageCalorieDifference := -((float64(weightDifference) / 1000) * CaloriesPerKilogramBodyFat) / 7
 
-	slog.Debug("Calculated average calorie difference", slog.Int("averageCalorieDifference", averageCalorieDifference), slog.Int("weightDifference", weightDifference))
+	slog.Debug("Calculated average calorie difference", slog.Float64("averageCalorieDifference", averageCalorieDifference), slog.Int("weightDifference", weightDifference))
 
-	totalDailyEnergyExpenditure := currentAverage.Calories + averageCalorieDifference
+	totalDailyEnergyExpenditure := int(float64(currentAverage.Calories) + averageCalorieDifference)
 
 	slog.Debug("Calculated total daily energy expenditure", slog.Int("totalDailyEnergyExpenditure", totalDailyEnergyExpenditure))
 
