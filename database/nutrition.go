@@ -14,6 +14,11 @@ type nutritionEntity struct {
 	weight   sql.NullInt64
 }
 
+type averageNutritionEntity struct {
+	calories sql.NullInt64
+	weight   sql.NullInt64
+}
+
 type sqlNutritionRepository struct {
 	db *sql.DB
 }
@@ -112,8 +117,37 @@ func (s *sqlNutritionRepository) FindByDateRange(ctx context.Context, start, end
 }
 
 func (s *sqlNutritionRepository) FindAverageNutrition(ctx context.Context, start, end time.Time) (domain.AverageNutrition, error) {
-	//TODO implement me
-	panic("implement me")
+	row := s.db.QueryRowContext(ctx, `SELECT CAST(AVG(calories) as INT) as calories, CAST(AVG(weight) AS INT) as weight FROM nutrition WHERE date >= date(?) AND date <= date(?)`,
+		start.Format("2006-01-02"),
+		end.Format("2006-01-02"),
+	)
+
+	if row.Err() != nil {
+		return domain.AverageNutrition{}, row.Err()
+	}
+
+	entity := new(averageNutritionEntity)
+	err := row.Scan(&entity.calories, &entity.weight)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.AverageNutrition{}, domain.NutritionNotFound
+	} else if err != nil {
+		return domain.AverageNutrition{}, err
+	}
+
+	var calories int
+	if entity.calories.Valid {
+		calories = int(entity.calories.Int64)
+	}
+
+	var weight int
+	if entity.weight.Valid {
+		weight = int(entity.weight.Int64)
+	}
+
+	return domain.AverageNutrition{
+		Calories: calories,
+		Weight:   weight,
+	}, nil
 }
 
 func (s *sqlNutritionRepository) Create(ctx context.Context, n domain.Nutrition) (domain.Nutrition, error) {

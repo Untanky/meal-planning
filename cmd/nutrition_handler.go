@@ -16,8 +16,17 @@ type nutritionHandler struct {
 }
 
 type nutritionData struct {
-	Manifest         manifest
-	NutritionEntries []nutritionView
+	Manifest                    manifest
+	NutritionEntries            []nutritionView
+	TotalDailyEnergyExpenditure totalDailyEnergyExpenditureView
+}
+
+type totalDailyEnergyExpenditureView struct {
+	Start                       time.Time
+	End                         time.Time
+	AverageCalories             int
+	PeriodWeightDifference      float64
+	TotalDailyEnergyExpenditure int
 }
 
 type nutritionView struct {
@@ -47,9 +56,23 @@ func (h *nutritionHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 		}
 	}
 
+	totalDailyEnergyExpenditure, err := h.nutritionService.CalculateTotalDailyEnergyExpenditure(context.TODO(), start, end)
+	if err != nil {
+		slog.Error("error retrieving meals from repository", slog.Any("reason", err))
+		http.Error(writer, "failed retrieving meal days", http.StatusInternalServerError)
+		return
+	}
+
 	h.serveTemplate(writer, "nutrition.gohtml", nutritionData{
 		Manifest:         h.manifest,
 		NutritionEntries: nutritionEntries,
+		TotalDailyEnergyExpenditure: totalDailyEnergyExpenditureView{
+			Start:                       totalDailyEnergyExpenditure.Start,
+			End:                         totalDailyEnergyExpenditure.End,
+			AverageCalories:             totalDailyEnergyExpenditure.AverageCalories,
+			PeriodWeightDifference:      float64(totalDailyEnergyExpenditure.PeriodWeightDifference) / 1000,
+			TotalDailyEnergyExpenditure: totalDailyEnergyExpenditure.TotalDailyEnergyExpenditure,
+		},
 	})
 }
 

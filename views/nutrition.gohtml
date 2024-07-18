@@ -13,18 +13,55 @@
 </head>
 <body class="bg-slate-50">
 <h1 class="font-semibold text-4xl text-center my-8">Nutrition</h1>
+{{ template "total-daily-energy-expenditure" .TotalDailyEnergyExpenditure }}
 {{ template "nutrition-list" .NutritionEntries }}
 </body>
 </html>
 
+{{ define "total-daily-energy-expenditure" }}
+    <section id="total-daily-energy-expenditure" class="max-w-[600px] mx-auto bg-white p-5 mb-4 rounded-xl shadow-md">
+        <h2 class="font-medium text-xl text-slate-700">
+            Details
+        </h2>
+        <div class="grid grid-cols-4 gap-2 mt-1.5">
+            <div class="font-light">
+                Period
+            </div>
+            <div class="col-span-3">
+                {{ .Start.Format "02.01.2006" }} - {{ .End.Format "02.01.2006" }}
+            </div>
+            <div class="font-light">
+                Average Calories
+            </div>
+            <div>
+                {{ .AverageCalories }} kCal
+            </div>
+            <div class="font-light">
+                Weight Difference
+            </div>
+            <div>
+                {{ .PeriodWeightDifference }} kg
+            </div>
+            <div class="font-light col-span-2">
+                Total Daily Energy Expenditure
+            </div>
+            <div>
+                {{ .TotalDailyEnergyExpenditure }} kCal
+            </div>
+        </div>
+    </section>
+{{ end }}
+
 {{ define "nutrition-list" }}
-    <ul class="max-w-[400px] flex flex-col mx-auto space-y-4">
-        {{ range . }}
-            <li>
-                {{ template "nutrition-entry" . }}
-            </li>
-        {{ end }}
-    </ul>
+    <section class="max-w-[400px] mx-auto">
+        <ul class="flex flex-col space-y-4">
+            {{ range . }}
+                <li>
+                    {{ template "nutrition-entry" . }}
+                </li>
+            {{ end }}
+        </ul>
+    </section>
 {{ end }}
 
 {{ define "nutrition-entry" }}
@@ -43,6 +80,8 @@
                         class="inline-block w-full text-right py-2 pl-3 pr-12 border border-slate-700 rounded-lg"
                         type="number"
                         name="calories"
+                        step="0.01"
+                        min="0"
                         {{ if .Calories }}value="{{.Calories}}"{{ end }}
                 >
                 <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
@@ -58,13 +97,15 @@
                         class="inline-block w-full text-right py-2 pl-3 pr-[34px] border border-slate-700 rounded-lg"
                         type="number"
                         name="weight"
+                        step="0.01"
+                        min="0"
                         {{ if .Weight }}value="{{ .Weight }}"{{ end }}
                 >
                 <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
                     kg
                 </span>
             </div>
-            <button class="bg-amber -200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
+            <button class="bg-amber-200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
                 Save
             </button>
         </form>
