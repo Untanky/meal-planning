@@ -1,70 +1,100 @@
 import 'htmx.org';
-import * as d3 from 'd3';
 import './main.css';
-import {ScaleTime, timeFormat} from "d3";
+import {
+    BarController,
+    BarElement,
+    Chart,
+    LinearScale,
+    LineController,
+    LineElement,
+    PointElement,
+    TimeScale
+} from "chart.js";
+import {DateTime, Duration} from 'luxon';
+import 'chartjs-adapter-luxon';
 
-const container = document.querySelector('#nutrition-diagram');
+Chart.register(BarController, BarElement, LinearScale, LineController, LineElement, PointElement, TimeScale);
 
-if (container) {
-    // Declare the chart dimensions and margins.
-    const width = container.getBoundingClientRect().width;
-    const height = 300;
-    const marginTop = 24;
-    const marginRight = 24;
-    const marginBottom = 24;
-    const marginLeft = 48;
+const ctx = document.querySelector('canvas#nutrition-diagram') as HTMLCanvasElement | null;
 
-    const nutrition = [
-        { date: new Date(2024, 6, 12), weight: 94.1, nutrition: 0 },
-        { date: new Date(2024, 6, 13), weight: 93.75, nutrition: 0 },
-        { date: new Date(2024, 6, 14), weight: 92.43, nutrition: 0 },
-        { date: new Date(2024, 6, 15), weight: 91.46, nutrition: 0 },
-        { date: new Date(2024, 6, 16), weight: 92.21, nutrition: 0 },
-        { date: new Date(2024, 6, 17), weight: 92, nutrition: 0 },
-        { date: new Date(2024, 6, 18), weight: 92, nutrition: 0 },
-    ]
-
-    // Declare the x (horizontal position) scale.
-    const x = d3.scaleTime()
-        .domain(d3.extent(nutrition, (n): Date => n.date) as [Date, Date])
-        .range([marginLeft, width - marginRight]);
-
-    // Declare the y (vertical position) scale.
-    const y = d3.scaleLinear()
-        .domain(d3.extent(nutrition, (n) => n.weight) as [number, number])
-        .range([height - marginBottom, marginTop]);
-
-    const weightLine = d3.line<{ date: Date; weight: number; }>()
-        .x(d => x(d.date))
-        .y(d => y(d.weight));
-
-    // Create the SVG container.
-    const svg = d3.create("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    // Add the x-axis.
-    svg.append("g")
-        .attr("transform", `translate(0,${height - marginBottom})`)
-        .call(d3.axisBottom(x).ticks(d3.timeDay));
-
-    // Add the y-axis.
-    svg.append("g")
-        .attr("transform", `translate(${marginLeft},0)`)
-        .call(d3.axisLeft(y));
-
-    // Append a path for the line.
-    svg.append("path")
-        .attr("fill", "none")
-        .attr("stroke", "steelblue")
-        .attr("stroke-width", 1.5)
-        .attr("d", weightLine(nutrition));
-
-    // Append the SVG element.
-    const node = svg.node();
-    if (node) {
-        container.append(node);
-    }
+if (ctx) {
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [DateTime.now(), DateTime.now().minus(Duration.fromObject({day: 1}))],
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Calories (kCal)',
+                    borderColor: 'rgb(186, 230, 253)',
+                    backgroundColor: 'rgba(125, 211, 252, 0.5)',
+                    yAxisID: 'caloriesAxis',
+                    data: [
+                        {x: DateTime.local().minus(Duration.fromObject({day: 6})).startOf('day'), y: 2097},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 5})).startOf('day'), y: 1996},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 4})).startOf('day'), y: 2405},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 3})).startOf('day'), y: 2169},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 2})).startOf('day'), y: 2369},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 1})).startOf('day'), y: 2000},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 0})).startOf('day'), y: 2000},
+                    ],
+                },
+                {
+                    label: 'Weight (kg)',
+                    borderColor: 'rgba(253, 230, 138, 0.5)',
+                    backgroundColor: 'rgba(252, 211, 77)',
+                    yAxisID: 'weightAxis',
+                    data: [
+                        {x: DateTime.local().minus(Duration.fromObject({day: 6})).startOf('day'), y: 94.1},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 5})).startOf('day'), y: 93.75},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 4})).startOf('day'), y: 92.43},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 3})).startOf('day'), y: 91.46},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 2})).startOf('day'), y: 92.21},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 1})).startOf('day'), y: 92},
+                        {x: DateTime.local().minus(Duration.fromObject({day: 0})).startOf('day'), y: 92},
+                    ],
+                },
+            ],
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                    },
+                    grid: {
+                        display: false,
+                    }
+                },
+                weightAxis: {
+                    title: {
+                        text: 'Weight (kg)',
+                        display: true,
+                    },
+                    grid: {
+                        color: 'rgba(180, 83, 9, 0.2)',
+                    },
+                    position: 'left',
+                },
+                caloriesAxis: {
+                    type: 'linear',
+                    title: {
+                        text: 'Calories (kCal)',
+                        display: true,
+                    },
+                    grid: {
+                        color: 'rgba(3, 105, 161, 0.2)',
+                    },
+                    beginAtZero: false,
+                    ticks: {
+                        stepSize: 100,
+                    },
+                    position: 'right'
+                },
+            },
+        },
+    });
 }
 
 const updateMealPlanDialog: HTMLDialogElement | null = document.querySelector('dialog#update-meal-day');
@@ -86,7 +116,6 @@ document.querySelectorAll('button.update-plan-button').forEach((element) => {
 });
 
 const closeDialogButton = document.querySelector('button#close-update-meal-day-dialog');
-console.info(closeDialogButton);
 if (closeDialogButton) {
     closeDialogButton.addEventListener('click', closeUpdateDialog);
 }
