@@ -13,6 +13,7 @@ const result = await esbuild.build({
     outdir: 'dist/assets',
     metafile: true,
     entryNames: '[dir]/[name]-[hash]',
+    sourcemap: true,
     plugins: [
         postCssPlugin({
             postcss: {
