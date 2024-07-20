@@ -8,12 +8,13 @@ import {
     LineController,
     LineElement,
     PointElement,
-    TimeScale
+    TimeScale,
+    Tooltip
 } from "chart.js";
 import {DateTime, Duration} from 'luxon';
 import 'chartjs-adapter-luxon';
 
-Chart.register(BarController, BarElement, LinearScale, LineController, LineElement, PointElement, TimeScale);
+Chart.register(BarController, BarElement, LinearScale, LineController, LineElement, PointElement, TimeScale, Tooltip);
 
 const ctx = document.querySelector('canvas#nutrition-diagram') as HTMLCanvasElement | null;
 
@@ -21,7 +22,15 @@ if (ctx) {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [DateTime.now(), DateTime.now().minus(Duration.fromObject({day: 1}))],
+            labels: [
+                DateTime.local().minus(Duration.fromObject({day: 6})).startOf('day'),
+                DateTime.local().minus(Duration.fromObject({day: 5})).startOf('day'),
+                DateTime.local().minus(Duration.fromObject({day: 4})).startOf('day'),
+                DateTime.local().minus(Duration.fromObject({day: 3})).startOf('day'),
+                DateTime.local().minus(Duration.fromObject({day: 2})).startOf('day'),
+                DateTime.local().minus(Duration.fromObject({day: 1})).startOf('day'),
+                DateTime.local().minus(Duration.fromObject({day: 0})).startOf('day'),
+            ],
             datasets: [
                 {
                     type: 'bar',
@@ -29,34 +38,22 @@ if (ctx) {
                     borderColor: 'rgb(186, 230, 253)',
                     backgroundColor: 'rgba(125, 211, 252, 0.5)',
                     yAxisID: 'caloriesAxis',
-                    data: [
-                        {x: DateTime.local().minus(Duration.fromObject({day: 6})).startOf('day'), y: 2097},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 5})).startOf('day'), y: 1996},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 4})).startOf('day'), y: 2405},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 3})).startOf('day'), y: 2169},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 2})).startOf('day'), y: 2369},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 1})).startOf('day'), y: 2000},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 0})).startOf('day'), y: 2000},
-                    ],
+                    data: [2097, 1996, 2405, 2169, 2369, 2000, 2000],
                 },
                 {
                     label: 'Weight (kg)',
-                    borderColor: 'rgba(253, 230, 138, 0.5)',
+                    borderColor: 'rgba(253, 230, 138)',
                     backgroundColor: 'rgba(252, 211, 77)',
                     yAxisID: 'weightAxis',
-                    data: [
-                        {x: DateTime.local().minus(Duration.fromObject({day: 6})).startOf('day'), y: 94.1},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 5})).startOf('day'), y: 93.75},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 4})).startOf('day'), y: 92.43},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 3})).startOf('day'), y: 91.46},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 2})).startOf('day'), y: 92.21},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 1})).startOf('day'), y: 92},
-                        {x: DateTime.local().minus(Duration.fromObject({day: 0})).startOf('day'), y: 92},
-                    ],
+                    data: [94.1, 93.75, 92.43, 91.46, 92.21, 92, 92],
                 },
             ],
         },
         options: {
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             scales: {
                 x: {
                     type: 'time',
