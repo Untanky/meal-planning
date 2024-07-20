@@ -4,6 +4,7 @@ import {
     BarController,
     BarElement,
     Chart,
+    ChartDataset,
     LinearScale,
     LineController,
     LineElement,
@@ -16,38 +17,48 @@ import 'chartjs-adapter-luxon';
 
 Chart.register(BarController, BarElement, LinearScale, LineController, LineElement, PointElement, TimeScale, Tooltip);
 
+type NutritionData = {
+    date: DateTime;
+    calories: number;
+    weight: number;
+};
+
+const data = [
+    { date: DateTime.local().minus(Duration.fromObject({ day: 6 })).startOf('day'), calories: 2097, weight: 94.1 },
+    { date: DateTime.local().minus(Duration.fromObject({ day: 5 })).startOf('day'), calories: 1996, weight: 93.75 },
+    { date: DateTime.local().minus(Duration.fromObject({ day: 4 })).startOf('day'), calories: 2405, weight: 92.43 },
+    { date: DateTime.local().minus(Duration.fromObject({ day: 3 })).startOf('day'), calories: 2169, weight: 91.46 },
+    { date: DateTime.local().minus(Duration.fromObject({ day: 2 })).startOf('day'), calories: 2369, weight: 92.21 },
+    { date: DateTime.local().minus(Duration.fromObject({ day: 1 })).startOf('day'), calories: 2000, weight: 92 },
+    { date: DateTime.local().minus(Duration.fromObject({ day: 0 })).startOf('day'), calories: 2000, weight: 92 },
+] as const satisfies NutritionData[];
+
 const ctx = document.querySelector('canvas#nutrition-diagram') as HTMLCanvasElement | null;
 
 if (ctx) {
+    const labels = data.map((nutrition) => nutrition.date);
+    const caloriesDataset: ChartDataset = {
+        type: 'bar',
+        label: 'Calories (kCal)',
+        borderColor: 'rgb(186, 230, 253)',
+        backgroundColor: 'rgba(125, 211, 252, 0.5)',
+        yAxisID: 'caloriesAxis',
+        data: data.map((nutrition) => nutrition.calories),
+    };
+    const weightDataset: ChartDataset = {
+        type: 'line',
+        label: 'Weight (kg)',
+        borderColor: 'rgba(253, 230, 138)',
+        backgroundColor: 'rgba(252, 211, 77)',
+        yAxisID: 'weightAxis',
+        data: data.map((nutrition) => nutrition.weight),
+    };
+
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [
-                DateTime.local().minus(Duration.fromObject({day: 6})).startOf('day'),
-                DateTime.local().minus(Duration.fromObject({day: 5})).startOf('day'),
-                DateTime.local().minus(Duration.fromObject({day: 4})).startOf('day'),
-                DateTime.local().minus(Duration.fromObject({day: 3})).startOf('day'),
-                DateTime.local().minus(Duration.fromObject({day: 2})).startOf('day'),
-                DateTime.local().minus(Duration.fromObject({day: 1})).startOf('day'),
-                DateTime.local().minus(Duration.fromObject({day: 0})).startOf('day'),
-            ],
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Calories (kCal)',
-                    borderColor: 'rgb(186, 230, 253)',
-                    backgroundColor: 'rgba(125, 211, 252, 0.5)',
-                    yAxisID: 'caloriesAxis',
-                    data: [2097, 1996, 2405, 2169, 2369, 2000, 2000],
-                },
-                {
-                    label: 'Weight (kg)',
-                    borderColor: 'rgba(253, 230, 138)',
-                    backgroundColor: 'rgba(252, 211, 77)',
-                    yAxisID: 'weightAxis',
-                    data: [94.1, 93.75, 92.43, 91.46, 92.21, 92, 92],
-                },
-            ],
+            labels: labels,
+            datasets: [weightDataset, caloriesDataset],
         },
         options: {
             interaction: {
