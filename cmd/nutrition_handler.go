@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"meal-planning/domain"
 	"net/http"
@@ -18,6 +19,7 @@ type nutritionHandler struct {
 type nutritionData struct {
 	Manifest                    manifest
 	NutritionEntries            []nutritionView
+	NutritionJSON               string
 	TotalDailyEnergyExpenditure totalDailyEnergyExpenditureView
 }
 
@@ -30,9 +32,9 @@ type totalDailyEnergyExpenditureView struct {
 }
 
 type nutritionView struct {
-	Date     time.Time
-	Calories int
-	Weight   float64
+	Date     time.Time `json:"date"`
+	Calories int       `json:"calories,omitempty"`
+	Weight   float64   `json:"weight,omitempty"`
 }
 
 func (h *nutritionHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -56,6 +58,8 @@ func (h *nutritionHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 		}
 	}
 
+	nutritionJSON, err := json.Marshal(nutritionEntries)
+
 	totalDailyEnergyExpenditure, err := h.nutritionService.CalculateTotalDailyEnergyExpenditure(context.TODO(), start, end)
 	if err != nil {
 		slog.Error("error retrieving meals from repository", slog.Any("reason", err))
@@ -66,6 +70,7 @@ func (h *nutritionHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 	h.serveTemplate(writer, "nutrition.gohtml", nutritionData{
 		Manifest:         h.manifest,
 		NutritionEntries: nutritionEntries,
+		NutritionJSON:    string(nutritionJSON),
 		TotalDailyEnergyExpenditure: totalDailyEnergyExpenditureView{
 			Start:                       totalDailyEnergyExpenditure.Start,
 			End:                         totalDailyEnergyExpenditure.End,
