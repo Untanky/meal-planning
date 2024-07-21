@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"meal-planning/domain"
 	"net/http"
@@ -59,6 +60,11 @@ func (h *nutritionHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 	}
 
 	nutritionJSON, err := json.Marshal(nutritionEntries)
+	if err != nil {
+		slog.Error("error marshaling meals to JSON", slog.Any("reason", err))
+		http.Error(writer, "failed marshaling meals to JSON", http.StatusInternalServerError)
+		return
+	}
 
 	totalDailyEnergyExpenditure, err := h.nutritionService.CalculateTotalDailyEnergyExpenditure(context.TODO(), start, end)
 	if err != nil {
@@ -125,6 +131,15 @@ func (h *nutritionHandler) updateNutritionEntry(writer http.ResponseWriter, requ
 		Calories: nutrition.Calories,
 		Weight:   float64(nutrition.Weight) / 1000,
 	}
+
+	nutritionJSON, err := json.Marshal(nutritionEntry)
+	if err != nil {
+		slog.Error("error marshaling meals to JSON", slog.Any("reason", err))
+		http.Error(writer, "failed marshaling meals to JSON", http.StatusInternalServerError)
+		return
+	}
+
+	writer.Header().Set("HX-Trigger", fmt.Sprintf(`{ "updateNutritionData": %s }`, string(nutritionJSON)))
 
 	h.serveTemplate(writer, "nutrition-entry", nutritionEntry)
 }
