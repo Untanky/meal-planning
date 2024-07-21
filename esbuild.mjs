@@ -7,6 +7,7 @@ import { writeFileSync } from "node:fs";
 const result = await esbuild.build({
     entryPoints: [
         'assets/main.ts',
+        'assets/nutrition.ts',
     ],
     bundle: true,
     minify: true,
