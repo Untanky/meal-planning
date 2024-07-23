@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Meal Planning</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    {{ range .Manifest.CssFiles }}
+        <link blocking="render" rel="stylesheet" type="text/css" href="{{ . }}">
+    {{ end }}
+    {{ range .Manifest.JsFiles }}
+        <script defer src="{{ . }}"></script>
+    {{ end }}
+</head>
+<body class="bg-slate-50">
+<main class="w-[450px] mx-auto">
+    <h1 class="font-semibold text-4xl text-center my-8">Nutrition</h1>
+    <section id="nutrition-diagram-section" class="bg-white p-5 mb-4 rounded-xl shadow-md">
+        <h2 class="font-medium text-xl text-slate-700 mb-2.5">
+            Trend
+        </h2>
+        <canvas
+                id="nutrition-diagram"
+                data-nutrition="{{ .NutritionJSON }}"
+                width="400"
+                height="300"
+                aria-label="Nutrition Diagram"
+                role="img"
+        ></canvas>
+    </section>
+    {{ template "total-daily-energy-expenditure" .TotalDailyEnergyExpenditure }}
+    {{ template "nutrition-list" .NutritionEntries }}
+</main>
+</body>
+</html>
+
+{{ define "total-daily-energy-expenditure" }}
+    <section id="total-daily-energy-expenditure" class="bg-white p-5 mb-4 rounded-xl shadow-md">
+        <h2 class="font-medium text-xl text-slate-700">
+            Details
+        </h2>
+        <div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 items-center mt-2.5">
+            <div class="font-light">
+                Maintenance Calories
+            </div>
+            <div>
+                {{ .TotalDailyEnergyExpenditure }} kCal
+            </div>
+            <div class="font-light">
+                Average Calories
+            </div>
+            <div>
+                {{ .AverageCalories }} kCal
+                {{ if lt .AverageCalories .TotalDailyEnergyExpenditure }}
+                    &darr;
+                {{ else if gt .AverageCalories .TotalDailyEnergyExpenditure }}
+                    &uarr;
+                {{ else }}
+                    &rarr;
+                {{ end }}
+            </div>
+            <div class="font-light">
+                Weight Difference
+            </div>
+            <div>
+                {{ printf "%.2f kg" .PeriodWeightDifference }}
+                {{ if lt .PeriodWeightDifference 0.0 }}
+                    &darr;
+                {{ else if gt .PeriodWeightDifference 0.0 }}
+                    &uarr;
+                {{ else }}
+                    &rarr;
+                {{ end }}
+            </div>
+        </div>
+    </section>
+{{ end }}
+
+{{ define "nutrition-list" }}
+    <section class="mx-auto">
+        <ul class="flex flex-col space-y-4">
+            {{ range . }}
+                <li>
+                    {{ template "nutrition-entry" . }}
+                </li>
+            {{ end }}
+        </ul>
+    </section>
+{{ end }}
+
+{{ define "nutrition-entry" }}
+    <div id="nutrition-{{ .Date.Format "2006-01-02" }}" class="bg-white p-5 rounded-xl shadow-md">
+        <h3 class="font-medium text-slate-700">{{ .Date.Format "02.01.2006 - Monday" }}</h3>
+        <form hx-put="/nutrition/{{ .Date.Format "2006-01-02" }}"
+              hx-target="#nutrition-{{ .Date.Format "2006-01-02" }}"
+              hx-swap="outerHTML"
+              class="grid grid-cols-[1fr_1fr_auto] mt-1.5 space-x-4">
+            <div class="relative">
+                <label class="block font-light mb-0.5" for="calories-{{ .Date.Format "2006-01-02" }}">
+                    Calories
+                </label>
+                <input
+                        id="calories-{{ .Date.Format "2006-01-02" }}"
+                        class="inline-block w-full text-right py-2 pl-3 pr-12 border border-slate-700 rounded-lg"
+                        type="number"
+                        name="calories"
+                        step="0.01"
+                        min="0"
+                        {{ if .Calories }}value="{{.Calories}}"{{ end }}
+                >
+                <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
+                    kCal
+                </span>
+            </div>
+            <div class="relative">
+                <label class="block font-light mb-0.5" for="weight-{{ .Date.Format "2006-01-02" }}">
+                    Weight
+                </label>
+                <input
+                        id="weight-{{ .Date.Format "2006-01-02" }}"
+                        class="inline-block w-full text-right py-2 pl-3 pr-[34px] border border-slate-700 rounded-lg"
+                        type="number"
+                        name="weight"
+                        step="0.01"
+                        min="0"
+                        {{ if .Weight }}value="{{ .Weight }}"{{ end }}
+                >
+                <span class="absolute font-light text-slate-700 select-none right-2 bottom-[9px]">
+                    kg
+                </span>
+            </div>
+            <button class="bg-amber-200 text-amber-950 px-4 py-2 border border-amber-300 rounded-lg transition-colors hover:bg-amber-300 hover:border-amber-400 self-end">
+                Save
+            </button>
+        </form>
+    </div>
+{{ end }}

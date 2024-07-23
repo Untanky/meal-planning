@@ -20,7 +20,6 @@ document.querySelectorAll('button.update-plan-button').forEach((element) => {
 });
 
 const closeDialogButton = document.querySelector('button#close-update-meal-day-dialog');
-console.info(closeDialogButton);
 if (closeDialogButton) {
     closeDialogButton.addEventListener('click', closeUpdateDialog);
 }

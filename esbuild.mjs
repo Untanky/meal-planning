@@ -7,12 +7,14 @@ import { writeFileSync } from "node:fs";
 const result = await esbuild.build({
     entryPoints: [
         'assets/main.ts',
+        'assets/nutrition.ts',
     ],
     bundle: true,
     minify: true,
     outdir: 'dist/assets',
     metafile: true,
     entryNames: '[dir]/[name]-[hash]',
+    sourcemap: true,
     plugins: [
         postCssPlugin({
             postcss: {

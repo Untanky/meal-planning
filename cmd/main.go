@@ -35,6 +35,9 @@ func main() {
 	mealDayRepo := database.NewSqlMealDayRepository(db)
 	mealDayService := domain.NewMealDayService(mealDayRepo)
 
+	nutritionRepo := database.NewSqlNutritionRepository(db)
+	nutritionService := domain.NewNutritionService(nutritionRepo)
+
 	slog.Info("Loading manifest")
 	file, err := os.OpenFile("./manifest.json", os.O_RDONLY, os.ModePerm)
 	if err != nil {
@@ -74,6 +77,13 @@ func main() {
 		manifest:        myManifest,
 		mealDayService:  mealDayService,
 	}
+
+	nutritionHandler := &nutritionHandler{
+		templateHandler:  tmplHandler,
+		manifest:         myManifest,
+		nutritionService: nutritionService,
+	}
+
 	mealHandler := &mealHandler{
 		templateHandler: tmplHandler,
 		mealDayService:  mealDayService,
@@ -85,6 +95,9 @@ func main() {
 	mux.HandleFunc("GET /meals/{date}", mealHandler.getMealByDate)
 	mux.HandleFunc("PUT /meals/{date}", mealHandler.updateMealByDate)
 	mux.HandleFunc("GET /meals/{date}/form", mealHandler.getMealFormByDate)
+	mux.HandleFunc("PUT /nutrition/{date}", nutritionHandler.updateNutritionEntry)
+
+	mux.Handle("/nutrition", nutritionHandler)
 	mux.Handle("/", indexHandler)
 
 	slog.Info("Starting server")
@@ -104,6 +117,7 @@ func (handler *templateHandler) serveTemplate(writer http.ResponseWriter, name s
 
 	err := handler.template.ExecuteTemplate(bufferedWriter, name, data)
 	if err != nil {
+		slog.Error("Error executing template", slog.Any("reason", err))
 		http.Error(writer, "could not render template", http.StatusInternalServerError)
 		return
 	}

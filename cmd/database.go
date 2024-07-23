@@ -21,4 +21,9 @@ func migrateDatabase(db *sql.DB) {
 	if err != nil {
 		panic(err)
 	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS nutrition (date TEXT PRIMARY KEY, calories INT, weight INT)`)
+	if err != nil {
+		panic(err)
+	}
 }
